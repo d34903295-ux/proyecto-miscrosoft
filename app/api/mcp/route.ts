@@ -69,6 +69,20 @@ function riskToText(report: Awaited<ReturnType<typeof generatePreMortem>>): stri
     lines.push("", "Puntos ciegos de la memoria (el silencio no es ausencia de riesgo):");
     for (const c of report.coverage) lines.push(`- ${c.dimension}: ${c.value}`);
   }
+  if (report.board && report.costs) {
+    lines.push(
+      "",
+      `Consejo (¿invertirías $${report.costs.budget.toLocaleString("en-US")}?): ${report.board.votes
+        .map((vt) => `${vt.role}=${vt.vote}`)
+        .join(" · ")} → ${report.board.invest.toUpperCase()}`,
+      `Pérdida esperada total: $${report.costs.totalExpected.toLocaleString("en-US")}`
+    );
+  }
+  if (report.pointOfNoReturn) {
+    lines.push(
+      `Punto de no retorno: ${report.pointOfNoReturn.whenLabel} (fracaso >${Math.round(report.pointOfNoReturn.failureProbability * 100)}% si no se resuelven las condiciones)`
+    );
+  }
   return lines.join("\n");
 }
 
@@ -146,6 +160,10 @@ export async function POST(req: Request) {
             risks: report.risks,
             gaps: report.gaps,
             coverage: report.coverage,
+            board: report.board,
+            costs: report.costs,
+            pointOfNoReturn: report.pointOfNoReturn,
+            funeral: report.funeral,
             trace: report.trace,
             generatedWith: report.generatedWith,
             retrieverUsed: report.retrieverUsed,

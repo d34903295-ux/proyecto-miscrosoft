@@ -136,19 +136,21 @@ export function reportToMarkdown(report: PreMortemReport): string {
     lines.push(`  - Resultado de aquel caso: ${r.evidence.outcome}`);
     lines.push("");
   }
-  const b = report.board;
-  lines.push(`## Consejo de administración — ¿invertirías $${report.costs.budget.toLocaleString("en-US")}?`);
-  for (const vt of b.votes) {
-    lines.push(`- **${vt.role}** (${vt.roleLabel}): **${vt.vote}** (convicción ${(vt.confidence * 100).toFixed(0)}%) — ${vt.argument}`);
+  if (report.board && report.costs) {
+    const b = report.board;
+    lines.push(`## Consejo de administración — ¿invertirías $${report.costs.budget.toLocaleString("en-US")}?`);
+    for (const vt of b.votes) {
+      lines.push(`- **${vt.role}** (${vt.roleLabel}): **${vt.vote}** (convicción ${(vt.confidence * 100).toFixed(0)}%) — ${vt.argument}`);
+    }
+    lines.push(`- **Decisión:** ${b.invest.toUpperCase()} — ${b.reason}`);
+    lines.push("");
+    lines.push(`## Coste esperado (presupuesto base $${report.costs.budget.toLocaleString("en-US")})`);
+    for (const c of report.costs.perRisk) {
+      lines.push(`- #${c.rank} ${c.failureCategory}: ${Math.round(c.probability * 100)}% × $${c.impact.toLocaleString("en-US")} = **$${c.expected.toLocaleString("en-US")}**`);
+    }
+    lines.push(`- **Coste total esperado: $${report.costs.totalExpected.toLocaleString("en-US")}** (las pérdidas se suman: los riesgos no son excluyentes)`);
+    lines.push("");
   }
-  lines.push(`- **Decisión:** ${b.invest.toUpperCase()} — ${b.reason}`);
-  lines.push("");
-  lines.push(`## Coste esperado (presupuesto base $${report.costs.budget.toLocaleString("en-US")})`);
-  for (const c of report.costs.perRisk) {
-    lines.push(`- #${c.rank} ${c.failureCategory}: ${Math.round(c.probability * 100)}% × $${c.impact.toLocaleString("en-US")} = **$${c.expected.toLocaleString("en-US")}**`);
-  }
-  lines.push(`- **Coste total esperado: $${report.costs.totalExpected.toLocaleString("en-US")}**`);
-  lines.push("");
   if (report.pointOfNoReturn) {
     const p = report.pointOfNoReturn;
     lines.push(`## Punto de no retorno (${p.whenLabel})`);
@@ -342,9 +344,10 @@ export default function Report({ report }: { report: PreMortemReport }) {
         en la memoria
       </div>
 
-      <BoardSection board={report.board} costs={report.costs} />
+      {/* informes guardados antes de v1.1 no traen estas secciones: se omiten sin romper */}
+      {report.board && report.costs && <BoardSection board={report.board} costs={report.costs} />}
 
-      <PnrSection pnr={report.pointOfNoReturn} />
+      {report.pointOfNoReturn && <PnrSection pnr={report.pointOfNoReturn} />}
 
       <div className="records">
         {risks.map((risk, i) => (
@@ -354,14 +357,16 @@ export default function Report({ report }: { report: PreMortemReport }) {
 
       <RiskMatrix risks={risks} />
 
-      <FuneralSection funeral={report.funeral} />
+      {report.funeral && <FuneralSection funeral={report.funeral} />}
 
-      <Collapsible
-        title="// coste esperado por riesgo"
-        count={`pérdida esperada ${usd(report.costs.totalExpected)}`}
-      >
-        <CostSection costs={report.costs} />
-      </Collapsible>
+      {report.costs && (
+        <Collapsible
+          title="// coste esperado por riesgo"
+          count={`pérdida esperada ${usd(report.costs.totalExpected)}`}
+        >
+          <CostSection costs={report.costs} />
+        </Collapsible>
+      )}
 
       {report.gaps.length > 0 && (
         <Collapsible
@@ -511,6 +516,9 @@ function CostSection({ costs }: { costs: CostModel }) {
           <span className="cost-exp">{usd(costs.totalExpected)}</span>
         </div>
       </div>
+      <p className="mx-foot">
+        las pérdidas esperadas se suman porque los riesgos no son excluyentes: pueden golpear varios.
+      </p>
     </div>
   );
 }

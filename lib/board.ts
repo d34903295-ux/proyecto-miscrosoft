@@ -92,9 +92,13 @@ export function deliberate(risks: DerivedRisk[], riskIndex: number): BoardDecisi
   if (noes >= 2) {
     invest = "no";
     reason = `${noes} de 4 direcciones ven patrones de fracaso directos en la memoria. El consejo no compromete el millón hasta un replanteo: resolver primero las mitigaciones del top de riesgos.`;
-  } else if (sies >= 3) {
+  } else if (sies >= 3 && riskIndex < 67) {
     invest = "sí";
     reason = `Mayoría del consejo a favor: los parecidos con fracasos pasados son vigilables, no bloqueantes. Se invierte con las señales tempranas como tablero de control.`;
+  } else if (sies >= 3) {
+    // coherencia con el dictamen: con índice de riesgo ALTO no hay "sí" pleno
+    invest = "condicionado";
+    reason = `Las direcciones votan a favor por separado, pero el índice agregado (${riskIndex}/100, alto) obliga al consejo a invertir POR TRAMOS: el cuadro completo pesa más que cada área aislada.`;
   } else {
     invest = "condicionado";
     reason = `El consejo invierte POR TRAMOS: el primer desembolso queda condicionado a cumplir las mitigaciones que cada dirección puso sobre la mesa, con revisión en el punto de no retorno.`;

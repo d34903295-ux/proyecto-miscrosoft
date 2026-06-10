@@ -18,7 +18,6 @@ const World3D = dynamicImport(() => import("@/components/World3D"), {
   ssr: false,
   loading: () => <div className="readout world-loading">// cargando el planeta…</div>,
 });
-const Notebook3D = dynamicImport(() => import("@/components/Notebook3D"), { ssr: false });
 
 interface ExternalFailureRaw {
   company: string;
@@ -144,23 +143,16 @@ export default function MundoPage() {
       )}
 
       <section className="section world-cta">
-        <div className="world-cta-grid">
-          <div className="world-notebook">
-            <Notebook3D />
-          </div>
-          <div>
-            <div className="kicker">// tu turno</div>
-            <h2 className="world-cta-title">¿Tu proyecto repetirá la historia?</h2>
-            <p className="lede prose">
-              Describe lo que vas a construir y el agente lo contrasta contra esta memoria —
-              antes de que tu sede sea otra luz ámbar.
-            </p>
-            <div className="controls">
-              <Link href="/">
-                <button className="primary">[ ejecutar pre-mortem ]</button>
-              </Link>
-            </div>
-          </div>
+        <div className="kicker">// tu turno</div>
+        <h2 className="world-cta-title">¿Tu proyecto repetirá la historia?</h2>
+        <p className="lede prose">
+          Describe lo que vas a construir y el agente lo contrasta contra esta memoria — antes de
+          que tu sede sea otra luz ámbar.
+        </p>
+        <div className="controls">
+          <Link href="/">
+            <button className="primary">[ ejecutar pre-mortem ]</button>
+          </Link>
         </div>
       </section>
 

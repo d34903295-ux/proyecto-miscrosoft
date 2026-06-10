@@ -20,9 +20,12 @@ export function notifyReport(report: PreMortemReport, baseUrl?: string): void {
     .map((r) => `#${r.rank} [${r.failureCategory}] «${r.evidence.caseName}»`)
     .join(" · ");
   const link = report.id && baseUrl ? `\n${baseUrl}/informe/${report.id}` : "";
+  const board = report.board
+    ? `\nConsejo: ${report.board.invest.toUpperCase()} · pérdida esperada $${report.costs?.totalExpected.toLocaleString("en-US") ?? "—"}`
+    : "";
   const text =
     `🪦 Pre-mortem generado — índice de riesgo ${v.riskIndex}/100 (${v.level}).\n` +
-    `${v.headline}\nTop: ${top}${link}`;
+    `${v.headline}\nTop: ${top}${board}${link}`;
 
   // fire-and-forget: no se espera la promesa.
   fetch(url, {
