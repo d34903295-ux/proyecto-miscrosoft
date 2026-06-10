@@ -4,6 +4,7 @@
 
 import { NextResponse } from "next/server";
 import { analyzeProject, parseDepth } from "@/lib/analyze";
+import { llmFromHeaders } from "@/lib/byok";
 import { guard } from "@/lib/guard";
 import { inc, log, observe } from "@/lib/logger";
 
@@ -45,9 +46,10 @@ export async function POST(req: Request) {
     }
 
     const origin = new URL(req.url).origin;
+    const llm = llmFromHeaders(req);
     const results = await Promise.all(
       projects.map(async (p) => {
-        const { report, cached } = await analyzeProject(p.description, depth, save, origin);
+        const { report, cached } = await analyzeProject(p.description, depth, save, origin, llm);
         return { name: p.name, report, cached };
       })
     );
@@ -60,6 +62,9 @@ export async function POST(req: Request) {
       name: r.name,
       id: r.report.id ?? null,
       riskIndex: r.report.verdict.riskIndex,
+      // probabilidad de éxito RELATIVA (modo VC): complemento del índice,
+      // útil para ordenar inversión — no es una predicción absoluta.
+      successProb: Math.max(5, 100 - r.report.verdict.riskIndex),
       level: r.report.verdict.level,
       headline: r.report.verdict.headline,
       dominantThemes: r.report.verdict.dominantThemes,

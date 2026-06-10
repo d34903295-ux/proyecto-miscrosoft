@@ -267,13 +267,23 @@ function parseJSON(content: string): any {
   return JSON.parse(cleaned);
 }
 
-// ── OpenAI / Azure OpenAI / GitHub Models / Ollama ────────────
-// Los cuatro hablan el mismo protocolo chat/completions; cambia URL, auth y modelo.
-type OpenAICompatMode = "openai" | "azure" | "github" | "ollama";
+// ── OpenAI / Azure / GitHub Models / Ollama / OpenRouter ──────
+// Todos hablan el mismo protocolo chat/completions; cambia URL, auth y modelo.
+type OpenAICompatMode = "openai" | "azure" | "github" | "ollama" | "openrouter";
+
+/** Override por request (BYOK desde el frontend): nunca se persiste ni se loguea. */
+export interface LLMOverride {
+  provider: string;
+  apiKey?: string;
+  model?: string;
+}
 
 class OpenAIReasoningLLM extends ChatReasoningLLM {
   readonly name: string;
-  constructor(private mode: OpenAICompatMode) {
+  constructor(
+    private mode: OpenAICompatMode,
+    private override?: LLMOverride
+  ) {
     super();
     this.name = mode;
   }
@@ -282,7 +292,14 @@ class OpenAIReasoningLLM extends ChatReasoningLLM {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     let model: string;
 
-    if (this.mode === "azure") {
+    if (this.mode === "openrouter") {
+      // OpenRouter: un solo endpoint y una sola key para cientos de modelos.
+      url = "https://openrouter.ai/api/v1/chat/completions";
+      headers["Authorization"] = `Bearer ${this.override?.apiKey ?? process.env.OPENROUTER_API_KEY}`;
+      headers["HTTP-Referer"] = "https://premortem.local";
+      headers["X-Title"] = "Pre-Mortem Institucional";
+      model = this.override?.model || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
+    } else if (this.mode === "azure") {
       const endpoint = process.env.AZURE_OPENAI_ENDPOINT!;
       const deployment = process.env.AZURE_OPENAI_DEPLOYMENT!;
       const apiVersion = process.env.AZURE_OPENAI_API_VERSION ?? "2024-08-01-preview";
@@ -351,9 +368,17 @@ class AnthropicReasoningLLM extends ChatReasoningLLM {
 }
 
 // ── Factory ───────────────────────────────────────────────────
-export function getLLM(): ReasoningLLM {
+export function getLLM(override?: LLMOverride): ReasoningLLM {
+  // BYOK desde el frontend: el override por request manda sobre el env.
+  if (override?.provider === "openrouter" && override.apiKey) {
+    return new OpenAIReasoningLLM("openrouter", override);
+  }
   const provider = (process.env.LLM_PROVIDER ?? "stub").toLowerCase();
   switch (provider) {
+    case "openrouter":
+      if (process.env.OPENROUTER_API_KEY) return new OpenAIReasoningLLM("openrouter");
+      console.warn("[llm] OPENROUTER_API_KEY ausente — uso stub.");
+      return new StubReasoningLLM();
     case "openai":
       if (process.env.OPENAI_API_KEY) return new OpenAIReasoningLLM("openai");
       console.warn("[llm] OPENAI_API_KEY ausente — uso stub.");

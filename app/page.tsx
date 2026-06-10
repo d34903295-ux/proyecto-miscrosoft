@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { EASE, Reveal } from "@/components/motion";
 import type { PreMortemReport } from "@/lib/types";
+import AISettings, { llmHeaders } from "@/components/AISettings";
 
 // El reporte (la parte más pesada de la UI) se carga bajo demanda: la página
 // inicial baja menos JS y el bundle del reporte llega mientras el agente analiza.
@@ -122,7 +123,7 @@ export default function Home() {
     try {
       const res = await fetch("/api/premortem", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...llmHeaders() },
         body: JSON.stringify({ description, depth }),
       });
       const data = await res.json();
@@ -286,6 +287,8 @@ export default function Home() {
           <span className="hint">⌘/Ctrl + Enter</span>
         </div>
         {error && <div className="error">{error}</div>}
+
+        <AISettings />
       </section>
 
       <div ref={reportAnchor} />

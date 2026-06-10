@@ -245,6 +245,53 @@ export interface CoverageGap {
   casesInMemory: number;
 }
 
+/** Voto de un miembro del consejo de administración simulado. */
+export interface BoardVote {
+  role: "CTO" | "CFO" | "CMO" | "COO";
+  roleLabel: string;
+  /** invertiría / con condiciones / no invertiría */
+  vote: "sí" | "condicionado" | "no";
+  confidence: number; // 0..1
+  /** Argumento anclado a los riesgos de su área. */
+  argument: string;
+  /** Riesgos de su área que motivan el voto. */
+  riskRefs: { rank: number; title: string; caseId: string }[];
+}
+
+/** Decisión agregada del consejo ("¿invertirías $1M?"). */
+export interface BoardDecision {
+  invest: "sí" | "condicionado" | "no";
+  confidence: number;
+  reason: string;
+  votes: BoardVote[];
+}
+
+/** Coste esperado de un riesgo (probabilidad × impacto). */
+export interface RiskCost {
+  rank: number;
+  title: string;
+  failureCategory: string;
+  probability: number; // = confianza calibrada
+  impact: number; // USD (fracción del presupuesto según severidad)
+  expected: number; // USD
+}
+
+/** Modelo de coste esperado del reporte (ilustrativo, presupuesto base configurable). */
+export interface CostModel {
+  budget: number;
+  perRisk: RiskCost[];
+  totalExpected: number;
+}
+
+/** Punto de no retorno: condiciones accionables con plazo. */
+export interface PointOfNoReturn {
+  /** "~Mes 9" del golpe más letal. */
+  whenLabel: string;
+  /** Prob. de fracaso acumulada si se llega a ese punto sin resolver. */
+  failureProbability: number; // 0..1
+  conditions: { condition: string; deadline: string; failureCategory: string; caseId: string }[];
+}
+
 /** El reporte pre-mortem completo. */
 export interface PreMortemReport {
   /** Id persistente del informe (presente cuando se guardó en el historial). */
@@ -264,6 +311,14 @@ export interface PreMortemReport {
   gaps: GapQuestion[];
   /** Puntos ciegos: dimensiones del proyecto que la memoria no cubre. */
   coverage: CoverageGap[];
+  /** Consejo de administración simulado: ¿invertirías $1M? */
+  board: BoardDecision;
+  /** Coste esperado por riesgo y total (ilustrativo). */
+  costs: CostModel;
+  /** Punto de no retorno: condiciones con plazo. */
+  pointOfNoReturn: PointOfNoReturn | null;
+  /** "Muéstrame mi funeral": obituario narrativo del proyecto, anclado a los riesgos. */
+  funeral: string;
   /** Proveedor de razonamiento usado (stub | openai | azure | anthropic). */
   generatedWith: string;
   /** Recuperador de memoria usado (synthetic | workiq). */

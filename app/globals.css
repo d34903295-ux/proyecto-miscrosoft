@@ -1487,3 +1487,261 @@ button:active:not(:disabled) {
 .verdict {
   will-change: transform;
 }
+
+/* ── consejo de administración ──────────────────────────────── */
+.board-votes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.board-card {
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+  padding: 16px 18px;
+}
+.board-card.vote-no { border-left: 3px solid var(--red); }
+.board-card.vote-condicionado { border-left: 3px solid var(--amber); }
+.board-card.vote-si { border-left: 3px solid var(--green); }
+.board-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.board-role {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.board-vote {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.board-vote.v-no { color: var(--red); }
+.board-vote.v-condicionado { color: var(--amber); }
+.board-vote.v-si { color: var(--green); }
+.board-arg {
+  margin-top: 10px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+.board-foot {
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.board-decision {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-inset);
+  padding: 18px 20px;
+}
+.board-decision.level-alto { border-color: var(--red); }
+.board-decision.level-medio { border-color: var(--amber-dim); }
+.board-decision.level-bajo { border-color: var(--green); }
+.board-dlabel {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-dim);
+}
+.board-dverdict {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 6px 0;
+  color: var(--ink);
+}
+.board-dverdict small {
+  font-size: 13px;
+  color: var(--ink-dim);
+  font-weight: 400;
+}
+.board-dreason {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+/* ── punto de no retorno ────────────────────────────────────── */
+.pnr-box {
+  margin-top: 12px;
+  border: 1px solid var(--red);
+  background: rgba(224, 87, 78, 0.05);
+  padding: 18px 20px;
+}
+.pnr-headline {
+  font-size: 16px;
+  color: var(--ink);
+}
+.pnr-pct {
+  color: var(--red);
+  font-size: 22px;
+}
+.pnr-list {
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+.pnr-list li {
+  margin: 8px 0;
+  color: var(--ink-2);
+}
+.pnr-when {
+  color: var(--ink-dim);
+  font-size: 12.5px;
+}
+
+/* ── coste esperado ─────────────────────────────────────────── */
+.cost-table {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+}
+.cost-row {
+  display: grid;
+  grid-template-columns: 1fr 70px 110px 150px;
+  gap: 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+  align-items: baseline;
+}
+.cost-row:last-child { border-bottom: none; }
+.cost-head {
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  background: var(--bg-inset);
+}
+.cost-exp {
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.cost-total {
+  background: var(--bg-inset);
+  font-weight: 700;
+}
+@media (max-width: 560px) {
+  .cost-row { grid-template-columns: 1fr 60px 90px 110px; font-size: 11.5px; }
+}
+
+/* ── funeral ────────────────────────────────────────────────── */
+.funeral {
+  margin-top: 26px;
+  text-align: center;
+}
+.funeral-btn {
+  border-color: var(--amber-dim);
+  color: var(--amber);
+  font-size: 15px;
+  padding: 16px 26px;
+}
+.funeral-box {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--bg-inset);
+  padding: 20px 24px;
+}
+.funeral-p {
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.65;
+  margin: 12px 0;
+}
+.funeral-p:first-of-type {
+  color: var(--ink);
+  font-size: 16.5px;
+}
+.funeral-p:last-of-type {
+  color: var(--amber);
+}
+
+/* ── memoria evolutiva (feedback) ───────────────────────────── */
+.feedback {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  border-top: 1px dashed var(--line-soft);
+  padding-top: 10px;
+}
+.feedback-q {
+  font-size: 12px;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.feedback-thanks {
+  font-size: 12.5px;
+  color: var(--green);
+}
+
+/* ── timeline de la catástrofe (eventos de la simulación) ───── */
+.sim-events {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0 0 0 26px;
+  position: relative;
+}
+.sim-events::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: linear-gradient(var(--amber-dim), var(--red));
+}
+.sim-events li {
+  position: relative;
+  margin: 14px 0;
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.sim-events li::before {
+  content: "";
+  position: absolute;
+  left: -23px;
+  top: 4px;
+  width: 9px;
+  height: 9px;
+  background: var(--bg);
+  border: 1px solid var(--amber);
+}
+.sim-events .ev-when {
+  color: var(--amber);
+  min-width: 90px;
+}
+
+/* ── configurar IA (OpenRouter BYOK) ────────────────────────── */
+.aiset {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+}
+.aiset-body {
+  padding: 4px 16px 16px;
+}
+.aiset-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+.aiset-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-dim);
+}
+.aiset select.search {
+  appearance: none;
+}

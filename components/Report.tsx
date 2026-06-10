@@ -8,11 +8,14 @@ import { Fragment, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AnimatedNumber, EASE, GrowBar, Reveal } from "@/components/motion";
 import type {
+  BoardDecision,
+  CostModel,
   CoverageGap,
   DerivedRisk,
   ExternalFailure,
   GapQuestion,
   InspectedCase,
+  PointOfNoReturn,
   PreMortemReport,
   TraceStep,
 } from "@/lib/types";
@@ -41,6 +44,8 @@ function standClass(stands: string): string {
   if (stands === "parcial") return "mid";
   return "dim";
 }
+
+const usd = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
 
 /** Sección plegable estilo terminal: cerrada muestra solo el encabezado con
  *  el conteo; el detalle se abre bajo demanda. Menos muro de texto. */
@@ -129,6 +134,31 @@ export function reportToMarkdown(report: PreMortemReport): string {
     lines.push(`- **Contraanálisis (${r.refutation.stands}):** ${r.refutation.challenge}`);
     lines.push(`- **Exhibit ${exhibitLetter(r.rank)} (evidencia):** ${r.evidence.caseName} (${r.evidence.year}) — caso \`${r.evidence.caseId}\` · relevancia ${(r.evidence.retrievalScore * 100).toFixed(0)}% · dimensiones: ${r.evidence.matchedDimensions.join("; ") || "—"}`);
     lines.push(`  - Resultado de aquel caso: ${r.evidence.outcome}`);
+    lines.push("");
+  }
+  const b = report.board;
+  lines.push(`## Consejo de administración — ¿invertirías $${report.costs.budget.toLocaleString("en-US")}?`);
+  for (const vt of b.votes) {
+    lines.push(`- **${vt.role}** (${vt.roleLabel}): **${vt.vote}** (convicción ${(vt.confidence * 100).toFixed(0)}%) — ${vt.argument}`);
+  }
+  lines.push(`- **Decisión:** ${b.invest.toUpperCase()} — ${b.reason}`);
+  lines.push("");
+  lines.push(`## Coste esperado (presupuesto base $${report.costs.budget.toLocaleString("en-US")})`);
+  for (const c of report.costs.perRisk) {
+    lines.push(`- #${c.rank} ${c.failureCategory}: ${Math.round(c.probability * 100)}% × $${c.impact.toLocaleString("en-US")} = **$${c.expected.toLocaleString("en-US")}**`);
+  }
+  lines.push(`- **Coste total esperado: $${report.costs.totalExpected.toLocaleString("en-US")}**`);
+  lines.push("");
+  if (report.pointOfNoReturn) {
+    const p = report.pointOfNoReturn;
+    lines.push(`## Punto de no retorno (${p.whenLabel})`);
+    lines.push(`Si llegas ahí sin resolver esto, la probabilidad de fracaso supera el ${Math.round(p.failureProbability * 100)}%:`);
+    for (const c of p.conditions) lines.push(`- ${c.condition} — ${c.deadline} (${c.failureCategory})`);
+    lines.push("");
+  }
+  if (report.funeral) {
+    lines.push(`## Obituario ("muéstrame mi funeral")`);
+    lines.push(report.funeral);
     lines.push("");
   }
   const sim = report.simulation;
@@ -312,13 +342,26 @@ export default function Report({ report }: { report: PreMortemReport }) {
         en la memoria
       </div>
 
+      <BoardSection board={report.board} costs={report.costs} />
+
+      <PnrSection pnr={report.pointOfNoReturn} />
+
       <div className="records">
         {risks.map((risk, i) => (
-          <RiskRecord key={risk.id} risk={risk} index={i} />
+          <RiskRecord key={risk.id} risk={risk} index={i} reportId={report.id} />
         ))}
       </div>
 
       <RiskMatrix risks={risks} />
+
+      <FuneralSection funeral={report.funeral} />
+
+      <Collapsible
+        title="// coste esperado por riesgo"
+        count={`pérdida esperada ${usd(report.costs.totalExpected)}`}
+      >
+        <CostSection costs={report.costs} />
+      </Collapsible>
 
       {report.gaps.length > 0 && (
         <Collapsible
@@ -340,8 +383,8 @@ export default function Report({ report }: { report: PreMortemReport }) {
 
       {report.externalFailures.length > 0 && (
         <Collapsible
-          title="// ya lo intentaron · fracasos públicos"
-          count={`${report.externalFailures.length} casos`}
+          title="// empresas que murieron por esto · fracasos mundiales"
+          count={`${report.externalFailures.length} casos con fuente`}
         >
           <ExternalSection failures={report.externalFailures} />
         </Collapsible>
@@ -368,6 +411,145 @@ export default function Report({ report }: { report: PreMortemReport }) {
         <TraceSection trace={report.trace} />
       </Collapsible>
     </section>
+  );
+}
+
+/** 🔥 Consejo de administración simulado: ¿invertirías $1M? */
+function BoardSection({ board, costs }: { board: BoardDecision; costs: CostModel }) {
+  const cls = board.invest === "no" ? "alto" : board.invest === "condicionado" ? "medio" : "bajo";
+  return (
+    <Reveal className="boardroom">
+      <div className="field-head" style={{ marginTop: 30 }}>
+        <span>// consejo de administración · ¿invertirías {usd(costs.budget)}?</span>
+        <span>4 direcciones deliberan</span>
+      </div>
+      <div className="board-votes">
+        {board.votes.map((v, i) => (
+          <motion.div
+            className={`board-card vote-${v.vote === "sí" ? "si" : v.vote}`}
+            key={v.role}
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px 0px" }}
+            transition={{ duration: 0.45, delay: i * 0.12, ease: EASE }}
+          >
+            <div className="board-head">
+              <span className="board-role">{v.role}</span>
+              <span className={`board-vote v-${v.vote === "sí" ? "si" : v.vote}`}>
+                {v.vote === "sí" ? "✓ invierte" : v.vote === "condicionado" ? "◐ condiciona" : "✗ no invierte"}
+              </span>
+            </div>
+            <div className="board-arg prose">{v.argument}</div>
+            <div className="board-foot">
+              {v.roleLabel} · convicción {(v.confidence * 100).toFixed(0)}%
+            </div>
+          </motion.div>
+        ))}
+      </div>
+      <div className={`board-decision level-${cls}`}>
+        <div className="board-dlabel">// decisión del consejo</div>
+        <div className="board-dverdict">
+          {board.invest === "sí" ? "SE INVIERTE" : board.invest === "condicionado" ? "INVERSIÓN POR TRAMOS" : "NO SE INVIERTE"}
+          <small> · convicción {(board.confidence * 100).toFixed(0)}% · pérdida esperada {usd(costs.totalExpected)}</small>
+        </div>
+        <div className="board-dreason prose">{board.reason}</div>
+      </div>
+    </Reveal>
+  );
+}
+
+/** 🚨 Punto de no retorno: condiciones con plazo. */
+function PnrSection({ pnr }: { pnr: PointOfNoReturn | null }) {
+  if (!pnr) return null;
+  return (
+    <Reveal className="pnr">
+      <div className="field-head" style={{ marginTop: 30 }}>
+        <span>// punto de no retorno</span>
+        <span>{pnr.whenLabel}</span>
+      </div>
+      <div className="pnr-box">
+        <div className="pnr-headline prose">
+          Si llegas a <b>{pnr.whenLabel}</b> sin resolver esto, la probabilidad de fracaso supera el{" "}
+          <b className="pnr-pct">{Math.round(pnr.failureProbability * 100)}%</b>:
+        </div>
+        <ul className="pnr-list prose">
+          {pnr.conditions.map((c) => (
+            <li key={c.caseId + c.failureCategory}>
+              <b>{c.condition}</b>{" "}
+              <span className="pnr-when">({c.deadline} · {c.failureCategory.toLowerCase()} · caso{" "}
+              <a className="cmd" href={`/case/${c.caseId}`}>{c.caseId}</a>)</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </Reveal>
+  );
+}
+
+/** 💸 Coste esperado: probabilidad × impacto, en dinero. */
+function CostSection({ costs }: { costs: CostModel }) {
+  return (
+    <div className="costs">
+      <p className="lede prose" style={{ marginTop: 8 }}>
+        Modelo ilustrativo sobre un presupuesto base de <b>{usd(costs.budget)}</b>: probabilidad =
+        confianza calibrada · impacto = fracción del presupuesto según la severidad histórica del caso.
+      </p>
+      <div className="cost-table" role="table">
+        <div className="cost-row cost-head" role="row">
+          <span>riesgo</span><span>prob.</span><span>impacto</span><span>pérdida esperada</span>
+        </div>
+        {costs.perRisk.map((c) => (
+          <div className="cost-row" role="row" key={c.rank}>
+            <span>#{c.rank} {c.failureCategory}</span>
+            <span>{Math.round(c.probability * 100)}%</span>
+            <span>{usd(c.impact)}</span>
+            <span className="cost-exp">{usd(c.expected)}</span>
+          </div>
+        ))}
+        <div className="cost-row cost-total" role="row">
+          <span>coste total esperado</span><span /><span />
+          <span className="cost-exp">{usd(costs.totalExpected)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 🎬 "Muéstrame mi funeral" — el obituario del proyecto. */
+function FuneralSection({ funeral }: { funeral: string }) {
+  const [open, setOpen] = useState(false);
+  if (!funeral) return null;
+  return (
+    <div className="funeral no-print">
+      {!open ? (
+        <button className="funeral-btn" onClick={() => setOpen(true)}>
+          [ 🪦 muéstrame mi funeral ]
+        </button>
+      ) : (
+        <motion.div
+          className="funeral-box"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE }}
+        >
+          <div className="field-head">
+            <span>// obituario · escrito desde el futuro que este reporte intenta evitar</span>
+            <button className="rec-toggle" onClick={() => setOpen(false)}>[ cerrar ]</button>
+          </div>
+          {funeral.split("\n\n").map((p, i) => (
+            <motion.p
+              className="funeral-p prose"
+              key={i}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 + i * 0.9, ease: EASE }}
+            >
+              {p}
+            </motion.p>
+          ))}
+        </motion.div>
+      )}
+    </div>
   );
 }
 
@@ -518,10 +700,37 @@ function InspectedSection({ inspected }: { inspected: InspectedCase[] }) {
   );
 }
 
-function RiskRecord({ risk, index }: { risk: DerivedRisk; index: number }) {
+function RiskRecord({
+  risk,
+  index,
+  reportId,
+}: {
+  risk: DerivedRisk;
+  index: number;
+  reportId?: string;
+}) {
   const lvl = sevLevel(risk.evidence.severity);
   // Solo el riesgo #1 abre expandido: lo demás a un toque. Menos muro de texto.
   const [open, setOpen] = useState(risk.rank === 1);
+  // Memoria evolutiva: marcar si el riesgo ocurrió alimenta la precisión histórica.
+  const [marked, setMarked] = useState<"sí" | "no" | null>(null);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+
+  async function sendFeedback(occurred: boolean) {
+    if (!reportId || marked) return;
+    setMarked(occurred ? "sí" : "no");
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId, riskId: risk.id, occurred }),
+      });
+      const data = await res.json();
+      if (res.ok && typeof data.accuracy === "number") setAccuracy(data.accuracy);
+    } catch {
+      // el feedback es best-effort: no rompe la lectura del reporte
+    }
+  }
   return (
     <article className="record" style={{ animationDelay: `${Math.min(index * 0.07, 0.5)}s` }}>
       <div className="idx">
@@ -631,6 +840,23 @@ function RiskRecord({ risk, index }: { risk: DerivedRisk; index: number }) {
             </a>
           </div>
         </div>
+
+        {reportId && (
+          <div className="feedback no-print">
+            {marked ? (
+              <span className="feedback-thanks">
+                registrado: {marked === "sí" ? "✓ ocurrió" : "✗ no ocurrió"} — la memoria aprende
+                {accuracy !== null && <> · precisión histórica del agente: {Math.round(accuracy * 100)}%</>}
+              </span>
+            ) : (
+              <>
+                <span className="feedback-q">¿este riesgo ocurrió en la realidad?</span>
+                <button className="rec-toggle" onClick={() => sendFeedback(true)}>[ ✓ sí ocurrió ]</button>
+                <button className="rec-toggle" onClick={() => sendFeedback(false)}>[ ✗ no ocurrió ]</button>
+              </>
+            )}
+          </div>
+        )}
 
         {risk.rank !== 1 && (
           <button className="rec-toggle no-print" onClick={() => setOpen(false)}>

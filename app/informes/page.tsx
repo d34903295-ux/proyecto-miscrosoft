@@ -16,6 +16,11 @@ function fmtDate(iso: string): string {
 
 export default function InformesPage() {
   const entries = getStore().list<PreMortemReport>("informes", 100);
+  // memoria evolutiva: precisión histórica de los riesgos ya contrastados
+  const fb = getStore().list<{ occurred: boolean }>("feedback", 1000);
+  const accuracy = fb.length
+    ? Math.round((fb.filter((e) => e.doc.occurred).length / fb.length) * 100)
+    : null;
 
   return (
     <div className="shell">
@@ -33,6 +38,12 @@ export default function InformesPage() {
 
       <div className="statusline">
         <span className="ok">&gt; historial de informes</span> · {entries.length} persistidos
+        {accuracy !== null && (
+          <>
+            {" · "}precisión histórica: <span className="ok">{accuracy}%</span> ({fb.length} riesgos
+            contrastados)
+          </>
+        )}
       </div>
 
       <section className="section">

@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import type { PreMortemReport } from "./types";
+import type { LLMOverride } from "./llm";
 import { generatePreMortem } from "./agent";
 import { cacheGet, cacheKey, cachePut } from "./cache";
 import { getStore, newId } from "./store";
@@ -37,13 +38,15 @@ export async function analyzeProject(
   description: string,
   depth: Depth,
   save: boolean,
-  baseUrl?: string
+  baseUrl?: string,
+  llm?: LLMOverride
 ): Promise<AnalyzeResult> {
-  const key = cacheKey(description, depth);
+  // la clave de caché distingue proveedor/modelo BYOK (jamás incluye la key).
+  const key = cacheKey(description, `${depth}|${llm?.provider ?? ""}|${llm?.model ?? ""}`);
   const hit = cacheGet(key);
   if (hit && (!save || hit.id)) return { report: hit, cached: true };
 
-  const report = await generatePreMortem(description, DEPTHS[depth]);
+  const report = await generatePreMortem(description, { ...DEPTHS[depth], llm });
 
   if (save) {
     report.id = newId();

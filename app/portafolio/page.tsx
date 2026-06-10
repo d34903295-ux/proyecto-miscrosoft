@@ -8,12 +8,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { EASE, GrowBar } from "@/components/motion";
+import { llmHeaders } from "@/components/AISettings";
 
 interface RankRow {
   rank: number;
   name: string;
   id: string | null;
   riskIndex: number;
+  successProb: number;
   level: "alto" | "medio" | "bajo";
   headline: string;
   dominantThemes: string[];
@@ -68,7 +70,7 @@ export default function PortafolioPage() {
     try {
       const res = await fetch("/api/premortem/batch", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...llmHeaders() },
         body: JSON.stringify({ projects, depth }),
       });
       const data = await res.json();
@@ -177,7 +179,7 @@ export default function PortafolioPage() {
       {ranking && (
         <section className="section">
           <div className="field-head">
-            <span>// ranking de riesgo · más peligroso primero</span>
+            <span>// modo VC · orden de inversión (menos riesgo primero, leído de abajo hacia arriba)</span>
             <span>memoria institucional como juez</span>
           </div>
           <div className="insp-list" style={{ marginTop: 12 }}>
@@ -194,7 +196,7 @@ export default function PortafolioPage() {
                     <span className="pf-name">{r.name}</span>
                     <span className="pf-index">
                       {r.riskIndex}
-                      <small>/100 · {r.level}</small>
+                      <small>/100 riesgo ({r.level}) · éxito relativo {r.successProb}%</small>
                     </span>
                   </div>
                   <div className="pf-bar">

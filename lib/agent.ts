@@ -26,13 +26,17 @@ import type {
   TraceStep,
   Verdict,
 } from "./types";
-import { getLLM } from "./llm";
+import { getLLM, type LLMOverride } from "./llm";
 import { getAllRecords, getRetriever } from "./retrieval";
 import { tokenize } from "./textsim";
 import { simulate } from "./simulation";
 import { matchExternalFailures } from "./external";
 import { detectGaps } from "./gaps";
 import { findBlindSpots } from "./coverage";
+import { deliberate } from "./board";
+import { expectedCosts } from "./cost";
+import { pointOfNoReturn } from "./pnr";
+import { writeFuneral } from "./funeral";
 
 const RETRIEVE_K = 10; // casos a inspeccionar antes de deduplicar
 const MAX_RISKS = 6; // riesgos en el reporte final
@@ -40,6 +44,8 @@ const MAX_RISKS = 6; // riesgos en el reporte final
 export interface PreMortemOptions {
   retrieveK?: number;
   maxRisks?: number;
+  /** BYOK por request (p.ej. OpenRouter desde el frontend). */
+  llm?: LLMOverride;
 }
 
 interface DedupeResult {
@@ -74,7 +80,7 @@ export async function generatePreMortem(
   const retrieveK = opts.retrieveK ?? RETRIEVE_K;
   const maxRisks = opts.maxRisks ?? MAX_RISKS;
 
-  const llm = getLLM();
+  const llm = getLLM(opts.llm);
   const retriever = getRetriever();
 
   // Traza auditable: cada paso queda registrado con lo que decidió y cuánto tardó.
@@ -203,20 +209,38 @@ export async function generatePreMortem(
     }`
   );
 
+  // 8) Deliberar: consejo simulado, coste esperado, punto de no retorno y
+  //    el obituario — todo compuesto desde los riesgos ya derivados.
+  const verdict = buildVerdict(derived);
+  const simulation = simulate(derived);
+  const generatedAt = new Date().toISOString();
+  const board = deliberate(derived, verdict.riskIndex);
+  const costs = expectedCosts(derived);
+  const pnr = pointOfNoReturn(derived, simulation);
+  const funeral = writeFuneral(derived, simulation, generatedAt);
+  mark(
+    "deliberar",
+    `consejo: ${board.votes.map((v) => `${v.role}=${v.vote}`).join(" ")} → ${board.invest} · pérdida esperada $${Math.round(costs.totalExpected / 1000)}k · PNR ${pnr?.whenLabel ?? "—"}`
+  );
+
   return {
     profile,
-    verdict: buildVerdict(derived),
+    verdict,
     risks: derived,
-    simulation: simulate(derived),
+    simulation,
     externalFailures: matchExternalFailures(profile, 3),
     inspected,
     trace,
     gaps,
     coverage,
+    board,
+    costs,
+    pointOfNoReturn: pnr,
+    funeral,
     generatedWith: llm.name,
     retrieverUsed: retriever.name,
     casesInspected: hits.length,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
   };
 }
 
