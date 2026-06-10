@@ -15,36 +15,98 @@ import { OrbitControls, Stars, useTexture } from "@react-three/drei";
 import { Suspense, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
-export interface FailureMarker {
-  company: string;
-  city: string;
+export interface FailureCluster {
+  /** Zona geográfica (coordenadas REALES de la ciudad). */
+  area: string;
   lat: number;
   lon: number;
+  /** Empresas con sede en esa zona, con su ciudad exacta. */
+  companies: { company: string; city: string }[];
 }
 
-/** Sedes (aprox.) de empresas de la memoria externa de fracasos. */
-export const MARKERS: FailureMarker[] = [
-  { company: "Webvan", city: "Foster City, EE.UU.", lat: 37.55, lon: -122.27 },
-  { company: "Pets.com", city: "San Francisco, EE.UU.", lat: 37.77, lon: -122.42 },
-  { company: "Juicero", city: "San Francisco, EE.UU.", lat: 38.1, lon: -121.9 },
-  { company: "Jawbone", city: "San Francisco, EE.UU.", lat: 37.3, lon: -123.0 },
-  { company: "Theranos", city: "Palo Alto, EE.UU.", lat: 36.9, lon: -122.0 },
-  { company: "Google+", city: "Mountain View, EE.UU.", lat: 37.42, lon: -121.3 },
-  { company: "23andMe", city: "Sunnyvale, EE.UU.", lat: 36.4, lon: -122.6 },
-  { company: "Quibi", city: "Los Ángeles, EE.UU.", lat: 34.05, lon: -118.24 },
-  { company: "MoviePass", city: "Nueva York, EE.UU.", lat: 40.73, lon: -73.99 },
-  { company: "Vine", city: "Nueva York, EE.UU.", lat: 41.4, lon: -73.4 },
-  { company: "Kozmo.com", city: "Nueva York, EE.UU.", lat: 40.0, lon: -74.6 },
-  { company: "Quirky", city: "Nueva York, EE.UU.", lat: 40.71, lon: -75.2 },
-  { company: "Celsius Network", city: "Hoboken, EE.UU.", lat: 39.9, lon: -73.3 },
-  { company: "IBM Watson Health", city: "Cambridge, EE.UU.", lat: 42.36, lon: -71.06 },
-  { company: "Argo AI", city: "Pittsburgh, EE.UU.", lat: 40.44, lon: -79.99 },
-  { company: "Builder.ai", city: "Londres, R.U.", lat: 51.51, lon: -0.13 },
-  { company: "Babylon Health", city: "Londres, R.U.", lat: 50.8, lon: 0.9 },
-  { company: "Powa Technologies", city: "Londres, R.U.", lat: 52.2, lon: -1.2 },
-  { company: "Better Place", city: "Tel Aviv, Israel", lat: 32.07, lon: 34.79 },
-  { company: "FTX", city: "Nassau, Bahamas", lat: 25.06, lon: -77.34 },
+/**
+ * Sedes REALES de las 32 empresas de la memoria externa, agrupadas por zona
+ * geográfica con las coordenadas reales de cada ciudad (sin desplazamientos
+ * inventados): donde varias comparten metro, el marcador es el cluster y la
+ * lista muestra la ciudad exacta de cada una.
+ */
+export const CLUSTERS: FailureCluster[] = [
+  {
+    area: "Área de la Bahía de San Francisco",
+    lat: 37.7749,
+    lon: -122.4194,
+    companies: [
+      { company: "Webvan", city: "Foster City, CA" },
+      { company: "Pets.com", city: "San Francisco, CA" },
+      { company: "Juicero", city: "San Francisco, CA" },
+      { company: "Jawbone", city: "San Francisco, CA" },
+      { company: "Munchery", city: "San Francisco, CA" },
+      { company: "Sprig", city: "San Francisco, CA" },
+      { company: "Brandless", city: "San Francisco, CA" },
+      { company: "Sidecar", city: "San Francisco, CA" },
+      { company: "Homejoy", city: "San Francisco, CA" },
+      { company: "Shyp", city: "San Francisco, CA" },
+      { company: "Anki", city: "San Francisco, CA" },
+      { company: "Forward Health (CarePods)", city: "San Francisco, CA" },
+      { company: "Theranos", city: "Palo Alto, CA" },
+      { company: "Better Place", city: "Palo Alto, CA (operaciones en Israel)" },
+      { company: "Google+", city: "Mountain View, CA" },
+      { company: "Friendster", city: "Mountain View, CA" },
+      { company: "Beepi", city: "Mountain View, CA" },
+      { company: "23andMe", city: "Sunnyvale, CA" },
+    ],
+  },
+  {
+    area: "Los Ángeles",
+    lat: 34.0522,
+    lon: -118.2437,
+    companies: [{ company: "Quibi", city: "Los Ángeles, CA" }],
+  },
+  {
+    area: "Área de Nueva York",
+    lat: 40.7128,
+    lon: -74.006,
+    companies: [
+      { company: "MoviePass", city: "Nueva York, NY" },
+      { company: "Vine", city: "Nueva York, NY" },
+      { company: "Kozmo.com", city: "Nueva York, NY" },
+      { company: "Quirky", city: "Nueva York, NY" },
+      { company: "Casper", city: "Nueva York, NY" },
+      { company: "Birchbox", city: "Nueva York, NY" },
+      { company: "Celsius Network", city: "Hoboken, NJ" },
+    ],
+  },
+  {
+    area: "Cambridge, Massachusetts",
+    lat: 42.3736,
+    lon: -71.1097,
+    companies: [{ company: "IBM Watson Health", city: "Cambridge, MA" }],
+  },
+  {
+    area: "Pittsburgh",
+    lat: 40.4406,
+    lon: -79.9959,
+    companies: [{ company: "Argo AI", city: "Pittsburgh, PA" }],
+  },
+  {
+    area: "Londres",
+    lat: 51.5074,
+    lon: -0.1278,
+    companies: [
+      { company: "Builder.ai", city: "Londres, R.U." },
+      { company: "Babylon Health", city: "Londres, R.U." },
+      { company: "Powa Technologies", city: "Londres, R.U." },
+    ],
+  },
+  {
+    area: "Nassau",
+    lat: 25.0443,
+    lon: -77.3504,
+    companies: [{ company: "FTX", city: "Nassau, Bahamas" }],
+  },
 ];
+
+export const TOTAL_COMPANIES = CLUSTERS.reduce((a, c) => a + c.companies.length, 0);
 
 /** lat/lon → posición sobre la esfera (mapeo equirectangular estándar). */
 function latLonToVec3(lat: number, lon: number, r: number): THREE.Vector3 {
@@ -58,16 +120,18 @@ function latLonToVec3(lat: number, lon: number, r: number): THREE.Vector3 {
 }
 
 function Marker({
-  marker,
+  cluster,
   selected,
   onSelect,
 }: {
-  marker: FailureMarker;
+  cluster: FailureCluster;
   selected: boolean;
-  onSelect: (m: FailureMarker) => void;
+  onSelect: (c: FailureCluster) => void;
 }) {
-  const pos = useMemo(() => latLonToVec3(marker.lat, marker.lon, 1.02), [marker]);
+  const pos = useMemo(() => latLonToVec3(cluster.lat, cluster.lon, 1.02), [cluster]);
   const ref = useRef<THREE.Mesh>(null);
+  // el tamaño crece con la cantidad de empresas muertas en la zona
+  const base = 0.012 + Math.min(0.014, cluster.companies.length * 0.0016);
   useFrame(({ clock }) => {
     if (!ref.current) return;
     // pulso sutil; más fuerte si está seleccionado
@@ -80,7 +144,7 @@ function Marker({
       position={pos}
       onClick={(e) => {
         e.stopPropagation();
-        onSelect(marker);
+        onSelect(cluster);
       }}
       onPointerOver={(e) => {
         e.stopPropagation();
@@ -90,7 +154,7 @@ function Marker({
         document.body.style.cursor = "auto";
       }}
     >
-      <sphereGeometry args={[selected ? 0.022 : 0.014, 12, 12]} />
+      <sphereGeometry args={[selected ? base * 1.5 : base, 12, 12]} />
       <meshBasicMaterial color={selected ? "#ffd35c" : "#f2b01e"} toneMapped={false} />
     </mesh>
   );
@@ -100,8 +164,8 @@ function Earth({
   selected,
   onSelect,
 }: {
-  selected: FailureMarker | null;
-  onSelect: (m: FailureMarker) => void;
+  selected: FailureCluster | null;
+  onSelect: (c: FailureCluster) => void;
 }) {
   const [albedo, night, bump, clouds] = useTexture([
     "/3d/earth-albedo.jpg",
@@ -136,11 +200,11 @@ function Earth({
             metalness={0}
           />
         </mesh>
-        {MARKERS.map((m) => (
+        {CLUSTERS.map((c) => (
           <Marker
-            key={m.company}
-            marker={m}
-            selected={selected?.company === m.company}
+            key={c.area}
+            cluster={c}
+            selected={selected?.area === c.area}
             onSelect={onSelect}
           />
         ))}
@@ -162,8 +226,8 @@ export default function World3D({
   selected,
   onSelect,
 }: {
-  selected: FailureMarker | null;
-  onSelect: (m: FailureMarker) => void;
+  selected: FailureCluster | null;
+  onSelect: (c: FailureCluster) => void;
 }) {
   return (
     <Canvas

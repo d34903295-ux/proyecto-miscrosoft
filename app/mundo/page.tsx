@@ -9,8 +9,8 @@ import dynamicImport from "next/dynamic";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { EASE } from "@/components/motion";
-import type { FailureMarker } from "@/components/World3D";
-import { MARKERS } from "@/components/World3D";
+import type { FailureCluster } from "@/components/World3D";
+import { TOTAL_COMPANIES } from "@/components/World3D";
 import failures from "@/lib/memory/external_failures.json";
 
 // WebGL solo en cliente: el canvas se carga bajo demanda, nunca en SSR.
@@ -32,12 +32,22 @@ interface ExternalFailureRaw {
 }
 
 export default function MundoPage() {
-  const [selected, setSelected] = useState<FailureMarker | null>(null);
+  const [selected, setSelected] = useState<FailureCluster | null>(null);
+  const [company, setCompany] = useState<string | null>(null);
   const data = failures as ExternalFailureRaw[];
+
+  // al elegir zona: si tiene una sola empresa, abre su expediente directo
+  function selectCluster(c: FailureCluster) {
+    setSelected(c);
+    setCompany(c.companies.length === 1 ? c.companies[0].company : null);
+  }
+
   const info = useMemo(
-    () => (selected ? data.find((f) => f.company === selected.company) ?? null : null),
-    [selected, data]
+    () => (company ? data.find((f) => f.company === company) ?? null : null),
+    [company, data]
   );
+  const cityOf = (name: string) =>
+    selected?.companies.find((e) => e.company === name)?.city ?? "";
 
   return (
     <div className="shell">
@@ -54,8 +64,8 @@ export default function MundoPage() {
       </div>
 
       <div className="statusline">
-        <span className="ok">&gt; el mundo de los fracasos</span> · {MARKERS.length} sedes reales ·
-        toca un marcador ámbar
+        <span className="ok">&gt; el mundo de los fracasos</span> · {TOTAL_COMPANIES} empresas reales
+        en sus sedes reales · toca una luz ámbar
       </div>
 
       <section className="section" style={{ paddingBottom: 10 }}>
@@ -72,8 +82,30 @@ export default function MundoPage() {
       </section>
 
       <div className="world-wrap">
-        <World3D selected={selected} onSelect={setSelected} />
+        <World3D selected={selected} onSelect={selectCluster} />
       </div>
+
+      {selected && (
+        <section className="section" style={{ paddingBottom: info ? 0 : undefined }}>
+          <div className="field-head">
+            <span>// zona: {selected.area}</span>
+            <span>{selected.companies.length} empresas murieron aquí</span>
+          </div>
+          <div className="presets" style={{ marginTop: 10 }}>
+            {selected.companies.map((e) => (
+              <button
+                key={e.company}
+                className={`chip-btn ${company === e.company ? "on" : ""}`}
+                aria-pressed={company === e.company}
+                onClick={() => setCompany(e.company)}
+                title={e.city}
+              >
+                {e.company}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {info && selected && (
         <motion.section
@@ -87,7 +119,7 @@ export default function MundoPage() {
             <div className="ext-head">
               <span className="ext-co">{info.company}</span>
               <span className="ext-years">
-                {info.years} · {selected.city}
+                {info.years} · {cityOf(info.company)}
               </span>
             </div>
             <div className="ext-idea prose">{info.idea}</div>

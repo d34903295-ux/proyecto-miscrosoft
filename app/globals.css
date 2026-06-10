@@ -1782,3 +1782,9 @@ button:active:not(:disabled) {
   margin: 8px 0 10px;
   line-height: 1.05;
 }
+
+.aiset-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ink-dim);
+}

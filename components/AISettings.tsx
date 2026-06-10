@@ -19,11 +19,11 @@ export interface ORConfig {
 export function loadORConfig(): ORConfig {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    if (raw) return { model: "openai/gpt-4o-mini", ...JSON.parse(raw) };
+    if (raw) return { model: "openrouter/auto", ...JSON.parse(raw) };
   } catch {
     // localStorage corrupto o inaccesible → config vacía
   }
-  return { key: "", model: "openai/gpt-4o-mini" };
+  return { key: "", model: "openrouter/auto" };
 }
 
 /** Headers BYOK para fetch de análisis. Vacío si no hay key configurada. */
@@ -38,17 +38,18 @@ export function llmHeaders(): Record<string, string> {
 }
 
 const MODELS = [
-  "openai/gpt-4o-mini",
-  "openai/gpt-4o",
-  "anthropic/claude-sonnet-4.6",
-  "meta-llama/llama-3.3-70b-instruct",
-  "google/gemini-2.5-flash",
+  { id: "openrouter/auto", label: "⚡ automático — OpenRouter elige el mejor modelo" },
+  { id: "openai/gpt-4o-mini", label: "openai/gpt-4o-mini" },
+  { id: "openai/gpt-4o", label: "openai/gpt-4o" },
+  { id: "anthropic/claude-sonnet-4.6", label: "anthropic/claude-sonnet-4.6" },
+  { id: "meta-llama/llama-3.3-70b-instruct", label: "meta-llama/llama-3.3-70b" },
+  { id: "google/gemini-2.5-flash", label: "google/gemini-2.5-flash" },
 ];
 
 export default function AISettings() {
   const [open, setOpen] = useState(false);
   const [key, setKey] = useState("");
-  const [model, setModel] = useState("openai/gpt-4o-mini");
+  const [model, setModel] = useState("openrouter/auto");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export default function AISettings() {
   function clear() {
     localStorage.removeItem(LS_KEY);
     setKey("");
-    setModel("openai/gpt-4o-mini");
+    setModel("openrouter/auto");
   }
 
   const active = key.trim().length > 0;
@@ -113,10 +114,14 @@ export default function AISettings() {
               onChange={(e) => setModel(e.target.value)}
             >
               {MODELS.map((m) => (
-                <option key={m} value={m}>{m}</option>
+                <option key={m.id} value={m.id}>{m.label}</option>
               ))}
             </select>
           </div>
+          <p className="aiset-hint prose">
+            En <b>automático</b>, OpenRouter enruta cada llamada al mejor modelo disponible —
+            no tienes que elegir nada.
+          </p>
           <div className="controls" style={{ marginTop: 10 }}>
             <button className="primary" onClick={save} disabled={!key.trim()}>
               {saved ? "[ guardada ✓ ]" : "[ guardar key ]"}
