@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" fill="#0b0b0d"/>
+  <rect x="8.5" y="8.5" width="111" height="111" fill="none" stroke="#2a2930" stroke-width="1"/>
+  <!-- lápida -->
+  <path d="M40 100 V56 a24 24 0 0 1 48 0 v44 Z" fill="none" stroke="#f2b01e" stroke-width="5"/>
+  <line x1="32" y1="100" x2="96" y2="100" stroke="#f2b01e" stroke-width="5"/>
+  <!-- inscripción: prompt de terminal -->
+  <text x="64" y="72" font-family="monospace" font-size="26" font-weight="bold" fill="#f2b01e" text-anchor="middle">&gt;_</text>
+</svg>

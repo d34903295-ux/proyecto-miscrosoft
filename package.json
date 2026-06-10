@@ -1,0 +1,32 @@
+{
+  "name": "pre-mortem-institucional",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Agente de pre-mortem institucional: no predice, recuerda. Ancla cada riesgo a un caso real de la memoria de la empresa.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "node --import tsx --test \"tests/*.test.ts\"",
+    "eval": "node scripts/eval.mjs",
+    "seed:azure": "node scripts/seed-azure-search.mjs",
+    "video:preview": "cd video && npx -y hyperframes preview",
+    "video:lint": "cd video && npx -y hyperframes lint",
+    "video:render": "cd video && npx -y hyperframes render --output promo.mp4"
+  },
+  "dependencies": {
+    "framer-motion": "^12.40.0",
+    "lenis": "^1.3.23",
+    "next": "^14.2.35",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.10",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "tsx": "^4.22.4",
+    "typescript": "5.5.3"
+  }
+}

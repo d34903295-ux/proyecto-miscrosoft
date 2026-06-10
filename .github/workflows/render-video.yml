@@ -1,0 +1,40 @@
+# Renderiza el video promo (video/index.html) a MP4 con HyperFrames.
+# El runner de ubuntu sí tiene Chrome headless; el MP4 queda como artifact.
+
+name: render-video
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ["video/**"]
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Asegurar navegador de captura
+        working-directory: video
+        run: npx -y hyperframes browser ensure
+
+      - name: Lint de la composición
+        working-directory: video
+        run: npx -y hyperframes lint
+
+      - name: Renderizar MP4
+        working-directory: video
+        run: npx -y hyperframes render --output promo.mp4
+
+      - name: Subir video
+        uses: actions/upload-artifact@v4
+        with:
+          name: promo-premortem
+          path: video/promo.mp4

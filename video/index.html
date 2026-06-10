@@ -1,0 +1,325 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      /* frame.md: Terminal Forense — mono, near-black, un acento ámbar, filetes */
+      :root {
+        --bg: #0b0b0d;
+        --bg-panel: #100f12;
+        --ink: #e9e6df;
+        --ink-2: #b7b3aa;
+        --ink-dim: #86837c;
+        --line: #2a2930;
+        --amber: #f2b01e;
+        --amber-ink: #1a1407;
+        --red: #e0574e;
+        --green: #5bbd6b;
+      }
+      * {
+        margin: 0;
+        box-sizing: border-box;
+      }
+      [data-composition-id="root"] {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        background: var(--bg);
+        color: var(--ink);
+        overflow: hidden;
+        position: relative;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 68px,
+          linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 68px 100%,
+          var(--bg);
+      }
+      .scene-content {
+        width: 100%;
+        height: 100%;
+        padding: 120px 160px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 28px;
+      }
+      .kicker {
+        font-size: 26px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--amber);
+      }
+      .mega {
+        font-size: 148px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 0.96;
+      }
+      .mega .dim {
+        color: var(--ink-dim);
+      }
+      .sub {
+        font-size: 34px;
+        color: var(--ink-2);
+        max-width: 1280px;
+        line-height: 1.45;
+      }
+      .cursor {
+        display: inline-block;
+        width: 22px;
+        height: 96px;
+        background: var(--amber);
+        vertical-align: -6px;
+        margin-left: 14px;
+      }
+      .rule {
+        height: 1px;
+        background: var(--line);
+        width: 100%;
+      }
+      /* S3: pasos */
+      .steps {
+        display: flex;
+        gap: 24px;
+      }
+      .step {
+        flex: 1;
+        border: 1px solid var(--line);
+        background: var(--bg-panel);
+        padding: 44px 40px;
+      }
+      .step .n {
+        color: var(--amber);
+        font-size: 30px;
+        letter-spacing: 0.14em;
+      }
+      .step .t {
+        font-size: 44px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin: 14px 0 12px;
+        line-height: 1.05;
+      }
+      .step .d {
+        font-size: 24px;
+        color: var(--ink-dim);
+        line-height: 1.45;
+      }
+      /* S4: dictamen */
+      .meter {
+        display: flex;
+        align-items: baseline;
+        gap: 28px;
+      }
+      .idx {
+        font-size: 220px;
+        font-weight: 700;
+        color: var(--amber);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+      .idx small {
+        font-size: 54px;
+        color: var(--ink-dim);
+      }
+      .vbar {
+        height: 22px;
+        border: 1px solid var(--line);
+        background: var(--bg-panel);
+        width: 100%;
+        overflow: hidden;
+      }
+      .vbar span {
+        display: block;
+        height: 100%;
+        width: 75%;
+        background: var(--amber);
+        transform-origin: left center;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .chip {
+        border: 1px solid var(--line);
+        background: var(--bg-panel);
+        color: var(--ink-2);
+        font-size: 26px;
+        padding: 14px 26px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .chip.hot {
+        border-color: var(--amber);
+        color: var(--amber);
+      }
+      .chip.win {
+        border-color: var(--green);
+        color: var(--green);
+      }
+      /* S5: cierre */
+      .tomb {
+        width: 180px;
+        height: 180px;
+      }
+      .cta-center {
+        align-items: center;
+        text-align: center;
+      }
+      .foot {
+        font-size: 26px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+      }
+      /* z: la escena entrante cubre a la saliente durante la transición */
+      #s1 { z-index: 1; }
+      #s2 { z-index: 2; }
+      #s3 { z-index: 3; }
+      #s4 { z-index: 4; }
+      #s5 { z-index: 5; }
+    </style>
+  </head>
+  <body>
+    <div data-composition-id="root" data-width="1920" data-height="1080" data-start="0" data-duration="32">
+      <!-- S1 · título -->
+      <div id="s1" class="scene clip" data-start="0" data-duration="6.6" data-track-index="1">
+        <div class="scene-content">
+          <div class="kicker" id="s1-kicker">// pre-mortem / institucional</div>
+          <div class="mega" id="s1-l1">No se predice.</div>
+          <div class="mega" id="s1-l2"><span class="dim">Se recuerda.</span><span class="cursor" id="s1-cursor"></span></div>
+          <div class="sub" id="s1-sub">Un agente de razonamiento con la memoria de tu empresa.</div>
+        </div>
+      </div>
+
+      <!-- S2 · problema -->
+      <div id="s2" class="scene clip" data-start="6" data-duration="7" data-track-index="2">
+        <div class="scene-content">
+          <div class="kicker" id="s2-kicker">// el problema</div>
+          <div class="mega" id="s2-l1" style="font-size: 110px">Los proyectos no fallan<br />por razones nuevas.</div>
+          <div class="rule" id="s2-rule"></div>
+          <div class="sub" id="s2-sub">Fallan por las <b style="color: var(--amber)">mismas razones</b> por las que fallaron otros antes — y nadie lo recuerda al decidir.</div>
+        </div>
+      </div>
+
+      <!-- S3 · cómo funciona -->
+      <div id="s3" class="scene clip" data-start="12.4" data-duration="7.6" data-track-index="1">
+        <div class="scene-content">
+          <div class="kicker" id="s3-kicker">// cómo funciona</div>
+          <div class="steps">
+            <div class="step" id="s3-c1">
+              <div class="n">01</div>
+              <div class="t">Describe tu proyecto</div>
+              <div class="d">En tus palabras, o díctalo por voz.</div>
+            </div>
+            <div class="step" id="s3-c2">
+              <div class="n">02</div>
+              <div class="t">El agente recuerda</div>
+              <div class="d">Recupera los proyectos pasados que fracasaron parecido.</div>
+            </div>
+            <div class="step" id="s3-c3">
+              <div class="n">03</div>
+              <div class="t">Decide con evidencia</div>
+              <div class="d">Cada riesgo trae su caso real, abrible y verificable.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S4 · dictamen / features -->
+      <div id="s4" class="scene clip" data-start="19.4" data-duration="7.6" data-track-index="2">
+        <div class="scene-content">
+          <div class="kicker" id="s4-kicker">// dictamen forense</div>
+          <div class="meter" id="s4-meter">
+            <div class="idx"><span id="s4-num">0</span><small>/100</small></div>
+            <div style="flex: 1">
+              <div class="vbar"><span id="s4-fill"></span></div>
+              <div class="sub" style="margin-top: 18px" id="s4-sub">Riesgos rankeados, refutados y anclados a casos reales.</div>
+            </div>
+          </div>
+          <div class="chips">
+            <span class="chip" id="s4-ch1">traza de razonamiento</span>
+            <span class="chip" id="s4-ch2">contraanálisis</span>
+            <span class="chip" id="s4-ch3">memoria viva</span>
+            <span class="chip hot" id="s4-ch4">mcp · a2a</span>
+            <span class="chip win" id="s4-ch5">eval 8/8 ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- S5 · cierre (única escena con salida) -->
+      <div id="s5" class="scene clip" data-start="26.4" data-duration="5.6" data-track-index="1">
+        <div class="scene-content cta-center">
+          <svg class="tomb" id="s5-tomb" viewBox="0 0 128 128" aria-hidden="true">
+            <path d="M40 100 V56 a24 24 0 0 1 48 0 v44 Z" fill="none" stroke="#f2b01e" stroke-width="5" />
+            <line x1="32" y1="100" x2="96" y2="100" stroke="#f2b01e" stroke-width="5" />
+            <text x="64" y="72" font-family="monospace" font-size="26" font-weight="bold" fill="#f2b01e" text-anchor="middle">&gt;_</text>
+          </svg>
+          <div class="mega" id="s5-l1" style="font-size: 104px">Pre-Mortem<br />Institucional</div>
+          <div class="foot" id="s5-foot">Microsoft Agents League · Track Reasoning Agents</div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        // ── S1 (0–6.6) · entradas
+        tl.from("#s1-kicker", { y: 30, opacity: 0, duration: 0.5, ease: "power2.out" }, 0.2);
+        tl.from("#s1-l1", { y: 90, opacity: 0, duration: 0.8, ease: "power3.out" }, 0.45);
+        tl.from("#s1-l2", { y: 90, opacity: 0, duration: 0.8, ease: "expo.out" }, 0.75);
+        tl.from("#s1-sub", { opacity: 0, duration: 0.7, ease: "power1.inOut" }, 1.5);
+        // cursor de terminal: parpadeo finito (steps, no fade)
+        tl.to("#s1-cursor", { opacity: 0, duration: 0.5, ease: "steps(1)", repeat: 9, yoyo: true }, 1.2);
+
+        // ── transición a S2: wipe desde la derecha (la entrada ES la transición)
+        tl.from("#s2", { clipPath: "inset(0 0 0 100%)", duration: 0.6, ease: "power3.inOut" }, 6.0);
+        tl.from("#s2-kicker", { x: -40, opacity: 0, duration: 0.5, ease: "power2.out" }, 6.7);
+        tl.from("#s2-l1", { y: 70, opacity: 0, duration: 0.8, ease: "power3.out" }, 6.9);
+        tl.from("#s2-rule", { scaleX: 0, transformOrigin: "left center", duration: 0.7, ease: "expo.out" }, 7.5);
+        tl.from("#s2-sub", { y: 40, opacity: 0, duration: 0.6, ease: "power2.out" }, 7.8);
+
+        // ── transición a S3: wipe vertical
+        tl.from("#s3", { clipPath: "inset(100% 0 0 0)", duration: 0.6, ease: "power3.inOut" }, 12.4);
+        tl.from("#s3-kicker", { y: 30, opacity: 0, duration: 0.5, ease: "power2.out" }, 13.1);
+        tl.from("#s3-c1", { y: 80, opacity: 0, duration: 0.6, ease: "power3.out" }, 13.35);
+        tl.from("#s3-c2", { y: 80, opacity: 0, duration: 0.6, ease: "back.out(1.4)" }, 13.55);
+        tl.from("#s3-c3", { y: 80, opacity: 0, duration: 0.6, ease: "expo.out" }, 13.75);
+
+        // ── transición a S4: wipe desde la izquierda
+        tl.from("#s4", { clipPath: "inset(0 100% 0 0)", duration: 0.6, ease: "power3.inOut" }, 19.4);
+        tl.from("#s4-kicker", { x: -40, opacity: 0, duration: 0.5, ease: "power2.out" }, 20.1);
+        tl.from("#s4-meter", { y: 60, opacity: 0, duration: 0.7, ease: "power3.out" }, 20.3);
+        // índice que cuenta hasta 75 + barra que crece (seekeable: onUpdate sobre tween)
+        const idx = { v: 0 };
+        const numEl = () => document.getElementById("s4-num");
+        tl.from("#s4-fill", { scaleX: 0, duration: 1.4, ease: "power2.out" }, 20.6);
+        tl.to(idx, {
+          v: 75,
+          duration: 1.4,
+          ease: "power2.out",
+          onUpdate: () => { numEl().textContent = String(Math.round(idx.v)); },
+        }, 20.6);
+        tl.from("#s4-ch1", { y: 40, opacity: 0, duration: 0.45, ease: "power2.out" }, 21.5);
+        tl.from("#s4-ch2", { y: 40, opacity: 0, duration: 0.45, ease: "power3.out" }, 21.65);
+        tl.from("#s4-ch3", { y: 40, opacity: 0, duration: 0.45, ease: "expo.out" }, 21.8);
+        tl.from("#s4-ch4", { y: 40, opacity: 0, duration: 0.45, ease: "back.out(1.6)" }, 21.95);
+        tl.from("#s4-ch5", { scale: 0.6, opacity: 0, duration: 0.5, ease: "back.out(2)" }, 22.2);
+
+        // ── transición a S5: wipe vertical inverso
+        tl.from("#s5", { clipPath: "inset(0 0 100% 0)", duration: 0.6, ease: "power3.inOut" }, 26.4);
+        tl.from("#s5-tomb", { scale: 0.7, opacity: 0, duration: 0.7, ease: "back.out(1.5)" }, 27.1);
+        tl.from("#s5-l1", { y: 60, opacity: 0, duration: 0.7, ease: "power3.out" }, 27.4);
+        tl.from("#s5-foot", { opacity: 0, duration: 0.6, ease: "power1.inOut" }, 28.1);
+        // única salida permitida: fundido final de la última escena
+        tl.to("#s5 .scene-content", { opacity: 0, duration: 0.8, ease: "power2.in" }, 31.0);
+
+        window.__timelines["root"] = tl;
+      </script>
+    </div>
+  </body>
+</html>

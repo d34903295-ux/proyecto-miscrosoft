@@ -1,0 +1,21 @@
+services:
+  premortem:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      # LLM_PROVIDER: github          # LLM real gratis (requiere GITHUB_TOKEN)
+      # GITHUB_TOKEN: ${GITHUB_TOKEN}
+      # API_KEY: ${API_KEY}           # activa auth en endpoints de escritura/MCP
+      RATE_LIMIT_PER_MIN: "30"
+    volumes:
+      - premortem-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  premortem-data:

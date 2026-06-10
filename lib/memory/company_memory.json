@@ -1,0 +1,746 @@
+[
+  {
+    "id": "PRJ-2019-ATLAS",
+    "name": "Atlas — Portal de autoservicio para banca corporativa",
+    "year": 2019,
+    "clientType": "enterprise",
+    "tech": [
+      "web",
+      "legacy/integración",
+      "API/plataforma"
+    ],
+    "marketBet": "eficiencia/costos",
+    "teamDynamics": "multi-equipo",
+    "description": "Portal web para que clientes corporativos de un banco hicieran trámites sin llamar al ejecutivo. Debía integrarse con 4 core systems legacy del banco.",
+    "assumption": "Asumimos que las APIs del core bancario estarían documentadas y estables, y que TI del cliente nos daría accesos a tiempo.",
+    "whatWentWrong": "Las integraciones legacy consumieron el 70% del esfuerzo. Cada core tenía su propio formato, sin documentación y con ventanas de mantenimiento que rompían los flujos. El portal quedó listo pero la mitad de los trámites no funcionaban end-to-end.",
+    "ignoredSignals": [
+      "En el kickoff nadie del equipo legacy del cliente asistió",
+      "Pedimos specs de las APIs 3 veces y llegaron incompletas",
+      "El primer spike de integración tardó 3x lo estimado y lo tratamos como caso aislado"
+    ],
+    "outcome": "Lanzamiento retrasado 5 meses; alcance recortado a 2 de 6 trámites. Relación con el cliente tensa.",
+    "severity": 4,
+    "failureCategory": "Integración legacy",
+    "mitigation": "Antes de comprometer fecha, hacer un spike de integración real contra cada sistema legacy y poner por contrato el acceso y la disponibilidad de un punto de contacto técnico del cliente. Estimar legacy por evidencia, no por analogía."
+  },
+  {
+    "id": "PRJ-2020-NIMBUS",
+    "name": "Nimbus — Migración a la nube de una aseguradora",
+    "year": 2020,
+    "clientType": "enterprise",
+    "tech": [
+      "cloud/migración",
+      "legacy/integración",
+      "datos/BI"
+    ],
+    "marketBet": "eficiencia/costos",
+    "teamDynamics": "outsourcing",
+    "description": "Migrar el stack on-premise de una aseguradora a la nube para reducir costos de datacenter.",
+    "assumption": "Asumimos que era un 'lift and shift' y que el ahorro en infraestructura se vería en el primer trimestre.",
+    "whatWentWrong": "Las apps legacy no eran cloud-ready: dependían de IPs fijas, almacenamiento local y jobs nocturnos acoplados. El 'lift and shift' se volvió un re-arquitecturado parcial. Los costos de nube fueron mayores que el datacenter durante 8 meses por falta de optimización.",
+    "ignoredSignals": [
+      "El equipo de outsourcing no había hecho migraciones de apps con estado antes",
+      "No medimos el costo en un ambiente de prueba antes de mover producción",
+      "El cliente insistía en 'no tocar el código'"
+    ],
+    "outcome": "ROI prometido no se cumplió en el año 1. Se necesitó una segunda fase de optimización no presupuestada.",
+    "severity": 4,
+    "failureCategory": "Dependencia de proveedor",
+    "mitigation": "Clasificar cada app por 'cloud-readiness' antes de prometer ahorro. Correr una prueba de costo real con telemetría antes de migrar producción. No prometer ROI sin un plan de optimización (no solo de migración)."
+  },
+  {
+    "id": "PRJ-2021-FALCON",
+    "name": "Falcon — App de delivery para una cadena de restaurantes",
+    "year": 2021,
+    "clientType": "enterprise",
+    "tech": [
+      "app móvil",
+      "pagos/fintech",
+      "realtime"
+    ],
+    "marketBet": "crecimiento agresivo",
+    "teamDynamics": "deadline agresivo",
+    "description": "App propia de delivery para que la cadena dejara de pagar comisiones a marketplaces. Fecha fija atada a una campaña de marketing nacional.",
+    "assumption": "Asumimos que los usuarios migrarían del marketplace conocido a nuestra app solo por un pequeño descuento.",
+    "whatWentWrong": "La app lanzó a tiempo pero la adopción fue baja: los usuarios ya tenían sus tarjetas y direcciones guardadas en el marketplace y no querían recapturarlas. El descuento no compensó la fricción. El tracking en tiempo real fallaba en horas pico por una arquitectura no probada bajo carga.",
+    "ignoredSignals": [
+      "Nadie probó el onboarding con usuarios reales antes de lanzar",
+      "Las pruebas de carga se recortaron para llegar a la fecha",
+      "El equipo dijo 'lo optimizamos después del lanzamiento'"
+    ],
+    "outcome": "El día de la campaña la app se cayó 2 horas en pico. Adopción del 12% de lo proyectado en el primer mes.",
+    "severity": 5,
+    "failureCategory": "Adopción/onboarding",
+    "mitigation": "Reducir la fricción de migración (importar métodos de pago/direcciones, login social) antes de pelear por adopción. Hacer prueba de carga al nivel del pico de la campaña como criterio de salida, no como 'nice to have'."
+  },
+  {
+    "id": "PRJ-2021-ORION",
+    "name": "Orion — Plataforma de scoring crediticio con ML",
+    "year": 2021,
+    "clientType": "startup",
+    "tech": [
+      "IA/ML",
+      "datos/BI",
+      "pagos/fintech"
+    ],
+    "marketBet": "first-mover",
+    "teamDynamics": "founder-led",
+    "description": "Startup fintech que quería ser la primera en dar microcréditos instantáneos usando un modelo de ML propio.",
+    "assumption": "Asumimos que con suficientes datos el modelo predeciría el default mejor que los métodos tradicionales, y que regular vendría 'después'.",
+    "whatWentWrong": "El modelo se entrenó con datos de una población que no representaba a los nuevos solicitantes; en producción la tasa de default fue el doble de lo estimado. Además, el regulador exigió explicabilidad del scoring, algo que el modelo black-box no podía dar.",
+    "ignoredSignals": [
+      "El dataset de entrenamiento era de un solo canal de adquisición",
+      "Nadie del equipo había puesto un modelo de riesgo en producción regulado",
+      "Se pospuso hablar con un abogado regulatorio 'hasta tener tracción'"
+    ],
+    "outcome": "Pérdidas crediticias agotaron el runway antes de lo previsto; hubo que reconstruir el scoring con un modelo explicable.",
+    "severity": 5,
+    "failureCategory": "Modelo de IA en producción",
+    "mitigation": "Validar el modelo contra la distribución real de producción (no solo el set histórico) y monitorear drift. En dominios regulados, exigir explicabilidad desde el diseño y meter a compliance en la fase de diseño, no después del lanzamiento."
+  },
+  {
+    "id": "PRJ-2022-VEGA",
+    "name": "Vega — Marketplace B2B de insumos industriales",
+    "year": 2022,
+    "clientType": "startup",
+    "tech": [
+      "e-commerce",
+      "API/plataforma",
+      "pagos/fintech"
+    ],
+    "marketBet": "plataforma/escala",
+    "teamDynamics": "equipo nuevo",
+    "description": "Marketplace para conectar proveedores y compradores industriales. Apuesta de plataforma de dos lados.",
+    "assumption": "Asumimos que si construíamos la plataforma, proveedores y compradores llegarían (problema clásico 'build it and they will come').",
+    "whatWentWrong": "Problema del huevo y la gallina: sin compradores los proveedores no publicaban, sin catálogo los compradores no entraban. El equipo gastó todo en features de la plataforma y nada en arrancar un lado del mercado manualmente.",
+    "ignoredSignals": [
+      "El roadmap era 100% features, 0% go-to-market",
+      "Se midió 'usuarios registrados' en vez de transacciones reales",
+      "Nadie del equipo había levantado un marketplace de dos lados"
+    ],
+    "outcome": "Mucha plataforma, casi cero GMV. Pivot forzado a vender a un solo lado como SaaS.",
+    "severity": 4,
+    "failureCategory": "Adopción/onboarding",
+    "mitigation": "En marketplaces, sembrar manualmente un lado del mercado (hacer cosas que no escalan) antes de invertir en plataforma. Medir transacciones reales, no registros. Validar liquidez en un nicho antes de generalizar."
+  },
+  {
+    "id": "PRJ-2020-HELIOS",
+    "name": "Helios — Sistema de gestión para un municipio",
+    "year": 2020,
+    "clientType": "gobierno",
+    "tech": [
+      "web",
+      "legacy/integración",
+      "datos/BI"
+    ],
+    "marketBet": "cumplimiento/regulación",
+    "teamDynamics": "multi-equipo",
+    "description": "Sistema para digitalizar trámites de un gobierno municipal, con requisitos de transparencia y auditoría.",
+    "assumption": "Asumimos que los requisitos estaban claros en el pliego y que el alcance no cambiaría durante el proyecto.",
+    "whatWentWrong": "Cada área del municipio interpretaba los trámites distinto y aparecían 'requisitos legales' nuevos en cada demo. El scope creció sin control y la rotación política a mitad de proyecto cambió las prioridades.",
+    "ignoredSignals": [
+      "El pliego era ambiguo y lo firmamos igual",
+      "No había un único dueño de decisión del lado del cliente",
+      "Cada reunión agregaba requisitos sin quitar otros"
+    ],
+    "outcome": "Sobrecosto del 60% y entrega parcial al cambiar la administración. Parte del sistema nunca se usó.",
+    "severity": 4,
+    "failureCategory": "Alcance/scope creep",
+    "mitigation": "Exigir un único dueño de decisión y un proceso de control de cambios formal desde el día 1. En sector público, asumir cambios de prioridad por ciclos políticos y entregar en incrementos usables, no en un big bang final."
+  },
+  {
+    "id": "PRJ-2022-LYRA",
+    "name": "Lyra — Rediseño del e-commerce de un retailer",
+    "year": 2022,
+    "clientType": "enterprise",
+    "tech": [
+      "e-commerce",
+      "web",
+      "datos/BI"
+    ],
+    "marketBet": "crecimiento agresivo",
+    "teamDynamics": "deadline agresivo",
+    "description": "Replatforming completo del e-commerce de un retailer grande, con fecha atada al Black Friday.",
+    "assumption": "Asumimos que un sitio más bonito y moderno aumentaría la conversión por sí solo.",
+    "whatWentWrong": "Se priorizó el rediseño visual sobre la performance. El nuevo sitio era más lento (más JS, imágenes pesadas) y la conversión cayó. Se lanzó justo antes de Black Friday sin un periodo de estabilización.",
+    "ignoredSignals": [
+      "Los Core Web Vitals empeoraron en staging y se ignoró",
+      "No se hizo A/B test contra el sitio viejo",
+      "Se lanzó en el peor momento posible para 'aprovechar el tráfico'"
+    ],
+    "outcome": "Caída de conversión del 18% en el pico de ventas del año. Rollback parcial de emergencia.",
+    "severity": 5,
+    "failureCategory": "Performance/escala",
+    "mitigation": "Tratar performance (Core Web Vitals) como requisito de negocio medible, no estético. Validar con A/B test contra el baseline antes de reemplazar. Nunca lanzar un cambio mayor justo antes del pico; dejar ventana de estabilización."
+  },
+  {
+    "id": "PRJ-2023-PHOENIX",
+    "name": "Phoenix — Chatbot de soporte con IA generativa",
+    "year": 2023,
+    "clientType": "enterprise",
+    "tech": [
+      "IA/ML",
+      "chatbot/NLP",
+      "API/plataforma"
+    ],
+    "marketBet": "eficiencia/costos",
+    "teamDynamics": "equipo nuevo",
+    "description": "Chatbot con LLM para resolver tickets de soporte de nivel 1 y reducir el costo del call center.",
+    "assumption": "Asumimos que el LLM respondería bien sobre nuestros productos sin necesidad de conectar la base de conocimiento real.",
+    "whatWentWrong": "El bot alucinaba políticas y precios que no existían porque no estaba grounded en datos de la empresa. Los clientes recibían información incorrecta y subió el volumen de quejas. La base de conocimiento estaba desactualizada y dispersa.",
+    "ignoredSignals": [
+      "En las demos se probaban preguntas 'felices', nunca casos límite",
+      "Nadie midió la tasa de respuestas incorrectas antes de lanzar",
+      "Se asumió que el modelo 'ya sabe' de la empresa"
+    ],
+    "outcome": "Se apagó el bot a las 3 semanas tras varias respuestas erróneas viralizadas. Pérdida de confianza interna en la IA.",
+    "severity": 4,
+    "failureCategory": "Modelo de IA en producción",
+    "mitigation": "Anclar (grounding/RAG) las respuestas a la base de conocimiento real y citar la fuente. Medir tasa de alucinación/respuesta incorrecta con un set de evaluación adversarial antes de exponerlo a clientes. Empezar con sugerencia al agente humano, no respuesta directa."
+  },
+  {
+    "id": "PRJ-2021-CETUS",
+    "name": "Cetus — Plataforma IoT para flota de transporte",
+    "year": 2021,
+    "clientType": "enterprise",
+    "tech": [
+      "IoT",
+      "realtime",
+      "datos/BI",
+      "cloud/migración"
+    ],
+    "marketBet": "eficiencia/costos",
+    "teamDynamics": "dependencia de persona clave",
+    "description": "Sensores en camiones para monitorear consumo y rutas en tiempo real y optimizar la flota.",
+    "assumption": "Asumimos que la conectividad de los dispositivos en ruta sería estable y que un solo ingeniero senior podía sostener la arquitectura de ingestión.",
+    "whatWentWrong": "La conectividad en zonas rurales era intermitente y la plataforma no manejaba bien datos fuera de orden o duplicados. Todo el conocimiento de la ingestión vivía en una sola persona, que renunció a mitad de proyecto.",
+    "ignoredSignals": [
+      "No se diseñó para offline/reconexión desde el inicio",
+      "Una sola persona entendía el pipeline y no había documentación",
+      "Se pospuso el bus factor 'porque íbamos rápido'"
+    ],
+    "outcome": "Datos poco confiables para decisiones; el proyecto se congeló 4 meses tras la renuncia del ingeniero clave.",
+    "severity": 4,
+    "failureCategory": "Dependencia de persona clave",
+    "mitigation": "Diseñar para conectividad intermitente (buffering, idempotencia, manejo de datos fuera de orden) desde el inicio en IoT. Reducir el bus factor: documentar y pair-programar las partes críticas para que no dependan de una sola persona."
+  },
+  {
+    "id": "PRJ-2023-DRACO",
+    "name": "Draco — Wallet cripto para pagos minoristas",
+    "year": 2023,
+    "clientType": "startup",
+    "tech": [
+      "blockchain",
+      "pagos/fintech",
+      "app móvil"
+    ],
+    "marketBet": "first-mover",
+    "teamDynamics": "founder-led",
+    "description": "Wallet para pagar en comercios con cripto, apostando a ser pioneros en el mercado local.",
+    "assumption": "Asumimos que la gente quería pagar el café con cripto y que la regulación no nos alcanzaría pronto.",
+    "whatWentWrong": "La demanda real de pagar consumo diario con cripto fue mínima; la propuesta era una solución buscando un problema. Cuando llegó claridad regulatoria, varios requisitos (KYC, custodia) no estaban implementados y frenaron la operación.",
+    "ignoredSignals": [
+      "Las entrevistas con usuarios mostraban entusiasmo pero cero disposición a usarlo",
+      "Se confundió hype con demanda",
+      "Se ignoró el riesgo regulatorio por ser 'first-mover'"
+    ],
+    "outcome": "Bajísima retención; pivot a remesas tras quemar la mitad del capital.",
+    "severity": 4,
+    "failureCategory": "Expectativas del cliente",
+    "mitigation": "Validar demanda con comportamiento real (no entusiasmo declarado) antes de construir. Ser first-mover en un mercado regulado exige tener el plan de cumplimiento listo, no diferido. Distinguir hype de problema real del usuario."
+  },
+  {
+    "id": "PRJ-2019-MIRA",
+    "name": "Mira — Data warehouse y tablero ejecutivo",
+    "year": 2019,
+    "clientType": "enterprise",
+    "tech": [
+      "datos/BI",
+      "legacy/integración",
+      "cloud/migración"
+    ],
+    "marketBet": "eficiencia/costos",
+    "teamDynamics": "multi-equipo",
+    "description": "Consolidar datos de varias áreas en un warehouse y dar tableros a la dirección.",
+    "assumption": "Asumimos que los datos de las áreas estaban limpios y que se podían cruzar por claves comunes.",
+    "whatWentWrong": "Los datos estaban sucios, duplicados y sin claves consistentes entre sistemas. El 80% del esfuerzo fue limpieza no presupuestada. Los primeros tableros mostraban números que no cuadraban con los reportes manuales y la dirección perdió confianza.",
+    "ignoredSignals": [
+      "Nunca se hizo un data profiling antes de estimar",
+      "Cada área 'juraba' que sus datos estaban bien",
+      "Se prometió un tablero en 6 semanas sin ver los datos"
+    ],
+    "outcome": "Retraso del doble del plazo; el primer tablero se desechó por falta de confianza en los números.",
+    "severity": 3,
+    "failureCategory": "Calidad de datos",
+    "mitigation": "Hacer data profiling real antes de estimar cualquier proyecto de BI. Presupuestar la limpieza/conciliación como fase explícita. Reconciliar contra una fuente de verdad conocida antes de mostrar a ejecutivos."
+  },
+  {
+    "id": "PRJ-2022-TAURUS",
+    "name": "Taurus — Reescritura del ERP interno",
+    "year": 2022,
+    "clientType": "interno",
+    "tech": [
+      "legacy/integración",
+      "web",
+      "API/plataforma"
+    ],
+    "marketBet": "eficiencia/costos",
+    "teamDynamics": "deadline agresivo",
+    "description": "Reescribir desde cero el ERP interno legacy porque 'ya nadie lo entendía'.",
+    "assumption": "Asumimos que reescribir desde cero sería más rápido que entender y refactorizar el sistema viejo.",
+    "whatWentWrong": "El sistema viejo tenía 10 años de reglas de negocio implícitas. La reescritura big-bang nunca alcanzó paridad de features; se subestimaron casos borde que el legacy ya manejaba. Convivir dos sistemas duplicó el mantenimiento.",
+    "ignoredSignals": [
+      "Nadie documentó por qué el legacy hacía cada cosa rara (todas eran reglas reales)",
+      "Se eligió big-bang en vez de strangler/incremental",
+      "El 'estará listo en 6 meses' se repitió 3 veces"
+    ],
+    "outcome": "18 meses después seguían ambos sistemas en producción; se canceló la reescritura completa.",
+    "severity": 4,
+    "failureCategory": "Sobreingeniería",
+    "mitigation": "Evitar reescrituras big-bang; usar el patrón strangler (reemplazo incremental con el legacy vivo). Tratar las 'rarezas' del sistema viejo como requisitos reales hasta probar lo contrario. Medir paridad de features de forma explícita."
+  },
+  {
+    "id": "PRJ-2023-CYGNUS",
+    "name": "Cygnus — App de telemedicina",
+    "year": 2023,
+    "clientType": "startup",
+    "tech": [
+      "app móvil",
+      "realtime"
+    ],
+    "marketBet": "nuevo mercado",
+    "teamDynamics": "remoto/distribuido",
+    "description": "App para consultas médicas por video, entrando a un mercado nuevo de salud digital.",
+    "assumption": "Asumimos que la calidad de video y el flujo de agenda eran el core; el manejo de datos sensibles 'lo veríamos después'.",
+    "whatWentWrong": "Datos de salud sensibles se manejaron sin los controles de privacidad/consentimiento requeridos. Una auditoría detectó incumplimientos y hubo que rehacer el manejo de datos y la trazabilidad, frenando el crecimiento.",
+    "ignoredSignals": [
+      "No se involucró a nadie de privacidad/legal en el diseño",
+      "El equipo remoto asumió que 'otro' se encargaba de compliance",
+      "Se trató la regulación de salud como un trámite final"
+    ],
+    "outcome": "Bloqueo de la app en una región hasta remediar; costo de remediación alto y daño reputacional.",
+    "severity": 5,
+    "failureCategory": "Cumplimiento/regulación",
+    "mitigation": "En salud/datos sensibles, diseñar privacidad y consentimiento desde el inicio (privacy by design) con un responsable claro. No diferir compliance a una fase final. En equipos remotos, asignar dueños explícitos para que nada caiga entre sillas."
+  },
+  {
+    "id": "PRJ-2020-PAVO",
+    "name": "Pavo — Integración de pagos para e-commerce regional",
+    "year": 2020,
+    "clientType": "pyme",
+    "tech": [
+      "pagos/fintech",
+      "e-commerce",
+      "API/plataforma"
+    ],
+    "marketBet": "expansión internacional",
+    "teamDynamics": "equipo nuevo",
+    "description": "Agregar múltiples pasarelas de pago para vender en varios países de la región.",
+    "assumption": "Asumimos que todas las pasarelas se comportaban igual y que la conciliación de pagos sería trivial.",
+    "whatWentWrong": "Cada pasarela tenía reglas distintas de reembolso, contracargos y conciliación. Aparecieron descuadres entre lo cobrado y lo conciliado. Sin un proceso de conciliación robusto, se perdió dinero en transacciones fallidas y dobles cobros.",
+    "ignoredSignals": [
+      "No se diseñó la conciliación, solo el 'happy path' del cobro",
+      "Se ignoraron los estados intermedios (pago pendiente, parcial, contracargo)",
+      "Nadie en el equipo había integrado pagos multi-país"
+    ],
+    "outcome": "Descuadres contables durante meses y reembolsos manuales costosos hasta rehacer la conciliación.",
+    "severity": 4,
+    "failureCategory": "Pagos/conciliación",
+    "mitigation": "Diseñar la conciliación y los estados intermedios (no solo el happy path) desde el inicio en pagos. Tratar cada pasarela como un sistema distinto con sus reglas. Tener reportes de descuadre automáticos desde el día 1."
+  },
+  {
+    "id": "PRJ-2021-LEPUS",
+    "name": "Lepus — Super-app de servicios",
+    "year": 2021,
+    "clientType": "startup",
+    "tech": [
+      "app móvil",
+      "API/plataforma",
+      "pagos/fintech"
+    ],
+    "marketBet": "crecimiento agresivo",
+    "teamDynamics": "multi-equipo",
+    "description": "App que quería juntar delivery, pagos, transporte y reservas en un solo producto.",
+    "assumption": "Asumimos que ofrecer muchos servicios a la vez nos haría crecer más rápido que enfocarnos en uno.",
+    "whatWentWrong": "Demasiado alcance en paralelo: ningún vertical quedó suficientemente bueno. Los equipos competían por recursos y prioridades. El producto era mediocre en todo y excelente en nada; la marca no se asoció a ningún uso concreto.",
+    "ignoredSignals": [
+      "El roadmap tenía 4 verticales 'prioritarios' al mismo tiempo",
+      "Las métricas de cada vertical eran flojas pero se compensaban en agregado",
+      "Se confundió actividad con progreso"
+    ],
+    "outcome": "Quema de capital alta y churn elevado; reenfoque tardío a un solo vertical.",
+    "severity": 4,
+    "failureCategory": "Alcance/scope creep",
+    "mitigation": "Ganar un vertical antes de sumar otro; el foco vence a la amplitud en etapas tempranas. Definir una métrica norte por producto y no esconder verticales débiles en agregados. Secuenciar, no paralelizar todo."
+  },
+  {
+    "id": "PRJ-2022-CORVUS",
+    "name": "Corvus — Plataforma de e-learning corporativo",
+    "year": 2022,
+    "clientType": "enterprise",
+    "tech": [
+      "web",
+      "datos/BI",
+      "API/plataforma"
+    ],
+    "marketBet": "eficiencia/costos",
+    "teamDynamics": "outsourcing",
+    "description": "Plataforma para capacitar a miles de empleados y medir cumplimiento de cursos.",
+    "assumption": "Asumimos que si la plataforma estaba lista, los empleados la usarían porque era obligatoria.",
+    "whatWentWrong": "La UX era confusa y los empleados no encontraban sus cursos; el soporte se saturó. 'Obligatorio' no significó 'usado bien': la gente buscaba atajos para marcar cursos como completos sin aprender. Los reportes de cumplimiento eran engañosos.",
+    "ignoredSignals": [
+      "No hubo pruebas de usabilidad con empleados reales",
+      "Se midió 'cursos completados' y no aprendizaje",
+      "El proveedor entregó por requisitos, no por resultado"
+    ],
+    "outcome": "Alta tasa de soporte, baja retención de conocimiento; se rehizo la UX en una segunda fase.",
+    "severity": 3,
+    "failureCategory": "UX/usabilidad",
+    "mitigation": "Probar usabilidad con usuarios reales antes de masificar, aunque el uso sea obligatorio. Medir el resultado (aprendizaje/comportamiento) y no solo la actividad. Alinear al proveedor por outcome, no por entregables."
+  },
+  {
+    "id": "PRJ-2023-ARA",
+    "name": "Ara — Copiloto interno de datos con LLM",
+    "year": 2023,
+    "clientType": "interno",
+    "tech": [
+      "IA/ML",
+      "datos/BI",
+      "chatbot/NLP"
+    ],
+    "marketBet": "eficiencia/costos",
+    "teamDynamics": "equipo nuevo",
+    "description": "Asistente con LLM para que empleados consultaran datos de negocio en lenguaje natural.",
+    "assumption": "Asumimos que conectar el LLM a la base de datos y generar SQL resolvería las preguntas de negocio.",
+    "whatWentWrong": "El LLM generaba SQL plausible pero sutilmente incorrecto (joins mal, filtros de fecha equivocados), dando números creíbles pero falsos. Sin una capa semántica ni validación, los empleados tomaban decisiones con datos erróneos sin darse cuenta.",
+    "ignoredSignals": [
+      "No se definió un set de preguntas con respuestas correctas conocidas para evaluar",
+      "Se asumió que 'si compila, está bien'",
+      "No había capa semántica/diccionario de métricas"
+    ],
+    "outcome": "Se restringió el uso a usuarios técnicos tras detectar reportes equivocados; reconstrucción con capa semántica.",
+    "severity": 3,
+    "failureCategory": "Modelo de IA en producción",
+    "mitigation": "Poner una capa semántica/diccionario de métricas y validar el SQL generado contra un set dorado de preguntas-respuesta. Mostrar la consulta y la fuente para que el usuario verifique. No exponer texto-a-SQL crudo a decisiones de negocio."
+  },
+  {
+    "id": "PRJ-2020-GRUS",
+    "name": "Grus — Sistema de turnos para hospitales públicos",
+    "year": 2020,
+    "clientType": "gobierno",
+    "tech": [
+      "web",
+      "legacy/integración",
+      "realtime"
+    ],
+    "marketBet": "cumplimiento/regulación",
+    "teamDynamics": "alta rotación",
+    "description": "Sistema centralizado de turnos para una red de hospitales públicos.",
+    "assumption": "Asumimos que todos los hospitales operaban igual y adoptarían el sistema central sin resistencia.",
+    "whatWentWrong": "Cada hospital tenía procesos distintos y personal acostumbrado al papel. La resistencia al cambio fue enorme; sin capacitación ni acompañamiento, el personal usaba el sistema a medias y mantenía planillas paralelas. La alta rotación del equipo de proyecto hizo perder contexto.",
+    "ignoredSignals": [
+      "Se trató como problema técnico y no de gestión del cambio",
+      "No se involucró al personal de los hospitales en el diseño",
+      "Cada salida de un miembro del equipo reiniciaba decisiones"
+    ],
+    "outcome": "Adopción dispar; en varios hospitales el sistema convivió con el papel sin reemplazarlo.",
+    "severity": 3,
+    "failureCategory": "Adopción/onboarding",
+    "mitigation": "Tratar la adopción como gestión del cambio: involucrar a los usuarios finales en el diseño, capacitar y acompañar. No imponer un proceso único sin entender variaciones locales. Retener conocimiento ante la rotación con documentación viva."
+  },
+  {
+    "id": "PRJ-2022-INDUS",
+    "name": "Indus — Microservicios para escalar el monolito",
+    "year": 2022,
+    "clientType": "startup",
+    "tech": [
+      "API/plataforma",
+      "cloud/migración",
+      "realtime"
+    ],
+    "marketBet": "plataforma/escala",
+    "teamDynamics": "equipo nuevo",
+    "description": "Migrar un monolito a microservicios para 'estar listos para escalar'.",
+    "assumption": "Asumimos que microservicios nos darían escala y velocidad, aunque el equipo era pequeño y el tráfico aún modesto.",
+    "whatWentWrong": "La complejidad distribuida (latencia entre servicios, fallos parciales, observabilidad) superó al equipo. Una migración prematura: el problema no era de escala sino de velocidad de entrega, que empeoró por la sobreingeniería. Más servicios que ingenieros.",
+    "ignoredSignals": [
+      "Se adoptó microservicios por moda, no por una métrica de escala real",
+      "No había observabilidad ni CI/CD maduro antes de dividir",
+      "El equipo pasó más tiempo en infraestructura que en producto"
+    ],
+    "outcome": "La velocidad de entrega cayó por meses; se reconsolidaron varios servicios en un 'monolito modular'.",
+    "severity": 3,
+    "failureCategory": "Sobreingeniería",
+    "mitigation": "No adoptar microservicios sin una necesidad de escala real y una base de observabilidad/CI-CD madura. Preferir un monolito modular hasta que el dolor de escala lo justifique. Decidir arquitectura por evidencia, no por moda."
+  },
+  {
+    "id": "PRJ-2023-FORNAX",
+    "name": "Fornax — Expansión de un SaaS a un nuevo país",
+    "year": 2023,
+    "clientType": "enterprise",
+    "tech": [
+      "web",
+      "datos/BI"
+    ],
+    "marketBet": "expansión internacional",
+    "teamDynamics": "remoto/distribuido",
+    "description": "Llevar un SaaS exitoso en su país de origen a un mercado nuevo en otra región.",
+    "assumption": "Asumimos que el producto que funcionaba en casa funcionaría igual en el nuevo mercado con solo traducirlo.",
+    "whatWentWrong": "Diferencias de impuestos, facturación, formatos de fecha/moneda y expectativas culturales rompieron flujos clave. Localizar fue mucho más que traducir. El equipo distribuido entre zonas horarias ralentizó las decisiones.",
+    "ignoredSignals": [
+      "Se asumió 'mismo producto, otro idioma'",
+      "No se investigó la regulación fiscal local antes de vender",
+      "Las decisiones tardaban días por husos horarios sin reglas de trabajo asíncrono"
+    ],
+    "outcome": "Churn alto en el nuevo mercado por fricciones de facturación; relanzamiento tras localización profunda.",
+    "severity": 3,
+    "failureCategory": "Expectativas del cliente",
+    "mitigation": "Localizar de verdad (impuestos, facturación, formatos, cultura), no solo traducir, antes de vender en un mercado nuevo. Investigar regulación local temprano. En equipos multi-huso, definir reglas de trabajo asíncrono para no frenar decisiones."
+  },
+  {
+    "id": "PRJ-2021-CARINA",
+    "name": "Carina — Plataforma de reservas para eventos",
+    "year": 2021,
+    "clientType": "pyme",
+    "tech": [
+      "web",
+      "realtime",
+      "pagos/fintech"
+    ],
+    "marketBet": "crecimiento agresivo",
+    "teamDynamics": "deadline agresivo",
+    "description": "Plataforma para vender entradas de eventos con alta concurrencia en lanzamientos.",
+    "assumption": "Asumimos que la carga de los lanzamientos sería manejable y que no necesitábamos diseñar para picos extremos.",
+    "whatWentWrong": "En el primer gran evento, miles de usuarios entraron en segundos. La base de datos se saturó, hubo sobreventa de cupos por condiciones de carrera y la cola de pagos colapsó. No se diseñó para concurrencia ni se hicieron pruebas de estrés.",
+    "ignoredSignals": [
+      "No hubo prueba de estrés al nivel del lanzamiento real",
+      "No se manejó la concurrencia en la reserva de cupos (race conditions)",
+      "Se asumió tráfico promedio, no de pico"
+    ],
+    "outcome": "Sobreventa, reembolsos masivos y mala prensa en el primer evento grande.",
+    "severity": 5,
+    "failureCategory": "Performance/escala",
+    "mitigation": "Diseñar para el pico, no el promedio: control de concurrencia en cupos (locks/colas idempotentes) y pruebas de estrés al nivel real del lanzamiento como criterio de salida. Tener sala de espera/throttling para picos."
+  },
+  {
+    "id": "PRJ-2022-HYDRA",
+    "name": "Hydra — Wallet de pagos para una fintech en crecimiento",
+    "year": 2022,
+    "clientType": "startup",
+    "tech": [
+      "app móvil",
+      "pagos/fintech",
+      "API/plataforma"
+    ],
+    "marketBet": "crecimiento agresivo",
+    "teamDynamics": "deadline agresivo",
+    "description": "Wallet móvil con tarjeta virtual para una fintech que necesitaba lanzar antes que dos competidores directos. La prioridad explícita era velocidad de features para captar usuarios.",
+    "assumption": "Asumimos que la seguridad podía 'endurecerse después del lanzamiento' y que el proveedor de tarjetas ya cubría la parte sensible.",
+    "whatWentWrong": "Un endpoint interno de la API quedó expuesto sin rate limiting ni validación de sesión. A las 7 semanas del lanzamiento, un atacante enumeró cuentas y disparó transferencias de prueba. Hubo que congelar operaciones 4 días, notificar al regulador y auditar todo de emergencia.",
+    "ignoredSignals": [
+      "El único ingeniero con experiencia en seguridad lo advirtió en el PR y se pospuso 'para el sprint de hardening'",
+      "El pentest se agendó para DESPUÉS del lanzamiento por presupuesto",
+      "Las credenciales de staging y producción compartían secretos"
+    ],
+    "outcome": "Operación congelada 4 días, multa del regulador, y la ronda de inversión se cayó. La empresa sobrevivió pero pivotó a B2B.",
+    "severity": 5,
+    "failureCategory": "Seguridad",
+    "mitigation": "La seguridad de un producto de dinero no es un sprint posterior: pentest externo ANTES del lanzamiento, rate limiting y revisión de authz como criterio de salida de cada feature que toque fondos, y separación estricta de secretos por ambiente."
+  },
+  {
+    "id": "PRJ-2021-PICTOR",
+    "name": "Pictor — Replatform e-commerce para Black Friday",
+    "year": 2021,
+    "clientType": "enterprise",
+    "tech": [
+      "e-commerce",
+      "web",
+      "realtime"
+    ],
+    "marketBet": "crecimiento agresivo",
+    "teamDynamics": "deadline agresivo",
+    "description": "Reemplazo completo de la tienda online de un retailer grande, con fecha de corte atada a Black Friday porque la campaña de medios ya estaba comprada.",
+    "assumption": "Asumimos que la fecha era alcanzable recortando 'lo no esencial': pruebas de carga, plan de rollback y el periodo de convivencia entre plataforma vieja y nueva.",
+    "whatWentWrong": "Se llegó a la fecha, pero sin pruebas de carga reales ni rollback. El sitio aguantó 40 minutos del pico de Black Friday y colapsó. Sin plan de vuelta atrás, la tienda estuvo degradada las 6 horas de mayor venta del año.",
+    "ignoredSignals": [
+      "El plan de pruebas de carga se recortó dos veces 'por calendario'",
+      "En staging, el checkout degradaba con 10x menos tráfico del proyectado",
+      "El equipo pidió correr ambas plataformas en paralelo y se rechazó por costo"
+    ],
+    "outcome": "Se perdió la venta estimada de medio Black Friday y la confianza del negocio en el equipo de tecnología. El CTO salió en el Q1 siguiente.",
+    "severity": 4,
+    "failureCategory": "Time-to-market",
+    "mitigation": "Cuando la fecha es inamovible, el alcance es la variable: definir desde el día 1 qué se recorta si el calendario aprieta — y las pruebas de carga y el rollback nunca son recortables en un replatform con pico estacional."
+  },
+  {
+    "id": "PRJ-2023-VOLANS",
+    "name": "Volans — Plataforma de APIs internas de un banco",
+    "year": 2023,
+    "clientType": "enterprise",
+    "tech": [
+      "API/plataforma",
+      "legacy/integración"
+    ],
+    "marketBet": "eficiencia/costos",
+    "teamDynamics": "multi-equipo",
+    "description": "Capa unificada de APIs internas para que 5 equipos de producto del banco dejaran de integrarse punto a punto contra el core.",
+    "assumption": "Asumimos que con un comité quincenal de arquitectura bastaba para alinear a los 5 equipos consumidores y al equipo plataforma.",
+    "whatWentWrong": "Cada equipo avanzó contra una versión distinta del contrato de las APIs. Los breaking changes se comunicaban por chat y nadie era dueño del versionado. En la integración final, 3 de los 5 equipos no compilaban contra la versión publicada y se abrió un mes entero solo para reconciliar contratos.",
+    "ignoredSignals": [
+      "Dos equipos mockearon las APIs 'mientras tanto' y nunca probaron contra la real",
+      "El changelog de contratos llevaba 6 semanas sin actualizarse",
+      "Las reuniones de alineación pasaron de quincenales a 'cuando haga falta'"
+    ],
+    "outcome": "Tres meses de retraso agregado entre todos los equipos y una guerra de culpas que requirió intervención de dirección.",
+    "severity": 3,
+    "failureCategory": "Coordinación multi-equipo",
+    "mitigation": "Con múltiples equipos consumidores, el contrato es el producto: versionado semántico obligatorio, contract tests automáticos en CI de cada consumidor, y un dueño único del contrato con autoridad para frenar breaking changes."
+  },
+  {
+    "id": "PRJ-2020-AQUILA",
+    "name": "Aquila — Sistema de trámites para un organismo público",
+    "year": 2020,
+    "clientType": "gobierno",
+    "tech": [
+      "web",
+      "legacy/integración"
+    ],
+    "marketBet": "cumplimiento/regulación",
+    "teamDynamics": "alta rotación",
+    "description": "Digitalización de trámites de un organismo público, con un plazo regulatorio y un equipo mixto de planta y consultores externos.",
+    "assumption": "Asumimos que la documentación del proyecto bastaba para absorber la rotación natural de los consultores.",
+    "whatWentWrong": "En 14 meses rotó el 70% del equipo consultor. El conocimiento del dominio (las reglas reales de cada trámite, que no estaban escritas en ningún lado) se fue con las personas. Cada reemplazo re-aprendía de cero preguntándole a los mismos 2 funcionarios, que terminaron saturados. La velocidad cayó a un tercio.",
+    "ignoredSignals": [
+      "La consultora cambió 3 veces al líder técnico en un año",
+      "Las decisiones de negocio se tomaban en llamadas sin minuta",
+      "El onboarding de cada persona nueva tomaba 6 semanas y nadie lo midió como costo"
+    ],
+    "outcome": "El plazo regulatorio se incumplió; el organismo pagó la multa y renegoció el contrato con penalidades para la consultora.",
+    "severity": 4,
+    "failureCategory": "Rotación/conocimiento",
+    "mitigation": "En proyectos largos con rotación esperable, el conocimiento de dominio se captura como artefacto del proyecto (decisiones con minuta, reglas de negocio versionadas junto al código) y la continuidad de personas clave se pacta por contrato."
+  },
+  {
+    "id": "PRJ-2022-PERSEUS",
+    "name": "Perseus — Telemetría IoT para una flota de transporte",
+    "year": 2022,
+    "clientType": "pyme",
+    "tech": [
+      "IoT",
+      "datos/BI",
+      "realtime"
+    ],
+    "marketBet": "nuevo mercado",
+    "teamDynamics": "equipo nuevo",
+    "description": "Plataforma de telemetría en tiempo real para flotas de camiones de pymes logísticas, con sensores de un único fabricante elegido por precio.",
+    "assumption": "Asumimos que los sensores eran un commodity intercambiable y que el fabricante mantendría el firmware estable.",
+    "whatWentWrong": "El fabricante actualizó el firmware sin aviso y cambió el formato del protocolo: el 60% de la flota empezó a reportar datos corruptos un viernes por la noche. No había abstracción sobre el protocolo ni un segundo proveedor homologado, así que hubo que escribir un parser de emergencia mientras los clientes veían dashboards vacíos.",
+    "ignoredSignals": [
+      "El fabricante ya había cambiado el protocolo una vez en el piloto",
+      "Todo el parsing estaba acoplado al formato exacto del firmware",
+      "No existía entorno para probar contra versiones nuevas de firmware antes de producción"
+    ],
+    "outcome": "Dos semanas de datos no confiables, 3 clientes en periodo de prueba cancelaron, y se rehízo la capa de ingesta completa.",
+    "severity": 3,
+    "failureCategory": "Dependencia de proveedor",
+    "mitigation": "Con hardware de terceros, homologar al menos dos proveedores desde el piloto, aislar el protocolo detrás de una capa de abstracción propia, y exigir por contrato aviso previo de cambios de firmware con entorno de prueba."
+  },
+  {
+    "id": "PRJ-2023-SCUTUM",
+    "name": "Scutum — Copiloto interno con acceso a documentos corporativos",
+    "year": 2023,
+    "clientType": "interno",
+    "tech": [
+      "chatbot/NLP",
+      "IA/ML"
+    ],
+    "marketBet": "eficiencia/costos",
+    "teamDynamics": "equipo nuevo",
+    "description": "Asistente conversacional interno que respondía preguntas de empleados sobre la base documental de la empresa (políticas, contratos, planillas).",
+    "assumption": "Asumimos que con conectar el índice de búsqueda existente bastaba, porque 'los permisos ya estaban en el repositorio de documentos'.",
+    "whatWentWrong": "El índice de búsqueda ignoraba los permisos por documento: el chatbot le respondía a cualquier empleado con contenido de documentos de dirección, incluyendo bandas salariales y un borrador de reestructuración. Se descubrió porque un empleado preguntó por su propio despido antes de que se lo comunicaran.",
+    "ignoredSignals": [
+      "El equipo de seguridad pidió revisar el diseño y se le dio acceso 'cuando estuviera listo'",
+      "En la demo interna alguien notó que veía documentos de otra área y se anotó como 'bug menor'",
+      "Nadie probó el sistema con una cuenta sin privilegios"
+    ],
+    "outcome": "El piloto se apagó de un día para otro, hubo una crisis interna de confianza y el proyecto quedó congelado un año.",
+    "severity": 4,
+    "failureCategory": "Seguridad",
+    "mitigation": "En cualquier sistema de recuperación sobre documentos corporativos, los permisos por documento se evalúan EN la consulta (security trimming), se prueba con cuentas de mínimo privilegio desde la primera demo, y seguridad revisa el diseño antes del primer piloto."
+  },
+  {
+    "id": "PRJ-2021-DORADO",
+    "name": "Dorado — Expansión internacional de una tienda online",
+    "year": 2021,
+    "clientType": "pyme",
+    "tech": [
+      "e-commerce",
+      "pagos/fintech"
+    ],
+    "marketBet": "expansión internacional",
+    "teamDynamics": "founder-led",
+    "description": "Llevar la tienda online de una pyme a dos países vecinos, replicando la plataforma que ya funcionaba en el mercado local.",
+    "assumption": "Asumimos que expandirse era 'traducir el sitio y activar envíos': la misma plataforma, los mismos medios de pago, la misma operación.",
+    "whatWentWrong": "Cada país resultó un sistema distinto: el medio de pago dominante no era tarjeta sino transferencia y contraentrega, la facturación exigía un esquema fiscal local que la plataforma no soportaba, y la paquetería local rechazaba el formato de etiquetas. El 'lanzamiento' pasó 7 meses en adaptaciones que nadie había presupuestado.",
+    "ignoredSignals": [
+      "Un asesor local advirtió del esquema fiscal en la primera llamada y se anotó 'para después'",
+      "El checkout en el país nuevo convertía 5x peor que en el local desde la primera semana",
+      "Las devoluciones cross-border no tenían proceso definido"
+    ],
+    "outcome": "La expansión consumió el flujo de caja del año; se retiraron de un país y quedaron operando marginalmente en el otro.",
+    "severity": 3,
+    "failureCategory": "Cumplimiento/regulación",
+    "mitigation": "Antes de expandir, validar con un experto local los tres sistemas que siempre cambian: pagos, impuestos/facturación y logística. Presupuestar la adaptación local como un proyecto en sí mismo, no como un flag de configuración."
+  },
+  {
+    "id": "PRJ-2024-TUCANA",
+    "name": "Tucana — Streaming en vivo para una app de eventos",
+    "year": 2024,
+    "clientType": "consumer",
+    "tech": [
+      "app móvil",
+      "realtime",
+      "cloud/migración"
+    ],
+    "marketBet": "plataforma/escala",
+    "teamDynamics": "equipo nuevo",
+    "description": "Funcionalidad de streaming en vivo con chat para una app consumer de eventos, pensada para retransmitir conciertos y partidos a decenas de miles de espectadores simultáneos.",
+    "assumption": "Asumimos que si el streaming funcionaba bien con los 500 espectadores de las pruebas, escalar a 50.000 era cuestión de 'subir instancias'.",
+    "whatWentWrong": "En el primer evento grande, el chat en tiempo real (no el video) tiró el sistema: cada mensaje se replicaba a todos los espectadores vía websockets sin agrupación ni backpressure, y el backend colapsó con 12.000 usuarios. El video siguió, pero la app se congelaba al abrir el evento, y las reseñas de la tienda se llenaron de 1 estrella esa misma noche.",
+    "ignoredSignals": [
+      "Nunca se hizo una prueba de carga del chat, solo del video",
+      "El consumo de memoria por conexión crecía linealmente y se vio en las métricas semanas antes",
+      "Un ingeniero propuso agrupar mensajes y se descartó por 'optimización prematura'"
+    ],
+    "outcome": "El socio del evento no renovó, la nota de la app cayó de 4.6 a 3.1 y recuperarla tomó dos trimestres.",
+    "severity": 4,
+    "failureCategory": "Performance/escala",
+    "mitigation": "Probar bajo carga el camino REAL del usuario (incluido el chat y la concurrencia social, no solo el flujo principal) con al menos el doble del pico esperado, antes del primer evento público. En tiempo real, el fan-out es el primer sospechoso."
+  },
+  {
+    "id": "PRJ-2024-LACERTA",
+    "name": "Lacerta — Trazabilidad blockchain para una cadena de suministro",
+    "year": 2024,
+    "clientType": "startup",
+    "tech": [
+      "blockchain",
+      "API/plataforma"
+    ],
+    "marketBet": "first-mover",
+    "teamDynamics": "founder-led",
+    "description": "Plataforma de trazabilidad de alimentos sobre blockchain para que productores, transportistas y supermercados certificaran cada eslabón de la cadena.",
+    "assumption": "Asumimos que la inmutabilidad de blockchain era el diferenciador que el mercado pedía, y que los participantes operarían sus propios nodos por el valor de la transparencia.",
+    "whatWentWrong": "Ningún participante quería operar nodos ni pagar la complejidad: querían un dashboard donde subir y consultar certificados. La blockchain agregaba fricción (llaves, firmas, sincronización) sin que ningún cliente la hubiera pedido. Tras un año, el único piloto activo usaba la plataforma con un solo nodo... operado por la propia startup, es decir, una base de datos cara.",
+    "ignoredSignals": [
+      "En las entrevistas de venta, nadie preguntó por blockchain: preguntaban por el Excel que reemplazaba",
+      "El onboarding de cada participante tomaba semanas por el manejo de llaves",
+      "El equipo dedicaba más tiempo a la infraestructura de cadena que al producto"
+    ],
+    "outcome": "Se quemó la mitad del capital semilla en infraestructura que el cliente no valoraba; el pivot a SaaS tradicional llegó tarde y con el equipo desgastado.",
+    "severity": 3,
+    "failureCategory": "Sobreingeniería",
+    "mitigation": "La tecnología diferenciadora tiene que aparecer en las razones de compra del cliente, no solo en el pitch. Validar primero con la versión aburrida (una base de datos y un dashboard) y agregar la pieza exótica solo si el mercado la exige."
+  }
+]
