@@ -108,6 +108,20 @@ export const CLUSTERS: FailureCluster[] = [
 
 export const TOTAL_COMPANIES = CLUSTERS.reduce((a, c) => a + c.companies.length, 0);
 
+/** Zona (con coordenadas reales) donde tiene sede una empresa dada. */
+export function clusterOf(company: string): FailureCluster | undefined {
+  return CLUSTERS.find((c) => c.companies.some((e) => e.company === company));
+}
+
+/** Ciudad exacta de la sede de una empresa. */
+export function cityOfCompany(company: string): string {
+  for (const c of CLUSTERS) {
+    const hit = c.companies.find((e) => e.company === company);
+    if (hit) return hit.city;
+  }
+  return "";
+}
+
 /** lat/lon → posición sobre la esfera (mapeo equirectangular estándar). */
 function latLonToVec3(lat: number, lon: number, r: number): THREE.Vector3 {
   const phi = ((90 - lat) * Math.PI) / 180;
@@ -122,10 +136,13 @@ function latLonToVec3(lat: number, lon: number, r: number): THREE.Vector3 {
 function Marker({
   cluster,
   selected,
+  highlighted,
   onSelect,
 }: {
   cluster: FailureCluster;
   selected: boolean;
+  /** la zona contiene empresas que el PRE-MORTEM ACTUAL marcó como parecidas */
+  highlighted: boolean;
   onSelect: (c: FailureCluster) => void;
 }) {
   const pos = useMemo(() => latLonToVec3(cluster.lat, cluster.lon, 1.02), [cluster]);
@@ -134,10 +151,12 @@ function Marker({
   const base = 0.012 + Math.min(0.014, cluster.companies.length * 0.0016);
   useFrame(({ clock }) => {
     if (!ref.current) return;
-    // pulso sutil; más fuerte si está seleccionado
-    const s = 1 + Math.sin(clock.elapsedTime * 3) * (selected ? 0.35 : 0.12);
+    // pulso sutil; más fuerte si está seleccionado o si el análisis actual apunta aquí
+    const amp = selected ? 0.35 : highlighted ? 0.3 : 0.12;
+    const s = 1 + Math.sin(clock.elapsedTime * 3) * amp;
     ref.current.scale.setScalar(s);
   });
+  const color = selected ? "#ffd35c" : highlighted ? "#e0574e" : "#f2b01e";
   return (
     <mesh
       ref={ref}
@@ -154,17 +173,19 @@ function Marker({
         document.body.style.cursor = "auto";
       }}
     >
-      <sphereGeometry args={[selected ? base * 1.5 : base, 12, 12]} />
-      <meshBasicMaterial color={selected ? "#ffd35c" : "#f2b01e"} toneMapped={false} />
+      <sphereGeometry args={[selected || highlighted ? base * 1.5 : base, 12, 12]} />
+      <meshBasicMaterial color={color} toneMapped={false} />
     </mesh>
   );
 }
 
 function Earth({
   selected,
+  highlightCompanies,
   onSelect,
 }: {
   selected: FailureCluster | null;
+  highlightCompanies: string[];
   onSelect: (c: FailureCluster) => void;
 }) {
   const [albedo, night, bump, clouds] = useTexture([
@@ -205,6 +226,7 @@ function Earth({
             key={c.area}
             cluster={c}
             selected={selected?.area === c.area}
+            highlighted={c.companies.some((e) => highlightCompanies.includes(e.company))}
             onSelect={onSelect}
           />
         ))}
@@ -224,9 +246,12 @@ function Earth({
 
 export default function World3D({
   selected,
+  highlightCompanies = [],
   onSelect,
 }: {
   selected: FailureCluster | null;
+  /** Empresas que el pre-mortem actual marcó como parecidas: sus zonas laten en rojo. */
+  highlightCompanies?: string[];
   onSelect: (c: FailureCluster) => void;
 }) {
   return (
@@ -239,7 +264,7 @@ export default function World3D({
       <ambientLight intensity={0.25} />
       <directionalLight position={[4, 2, 3]} intensity={2.2} />
       <Suspense fallback={null}>
-        <Earth selected={selected} onSelect={onSelect} />
+        <Earth selected={selected} highlightCompanies={highlightCompanies} onSelect={onSelect} />
       </Suspense>
       <Stars radius={60} depth={30} count={2500} factor={3} saturation={0} fade speed={0.5} />
       <OrbitControls

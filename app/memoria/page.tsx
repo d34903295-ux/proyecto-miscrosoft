@@ -16,7 +16,7 @@ export default function MemoriaPage() {
           <Link href="/" className="syslink">
             &lt;&lt; volver
           </Link>
-          <span>rev 1.0</span>
+          <span>rev 1.1</span>
         </div>
       </div>
 

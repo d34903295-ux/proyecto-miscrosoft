@@ -6,11 +6,12 @@
 
 import Link from "next/link";
 import dynamicImport from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { EASE } from "@/components/motion";
+import { EASE, GrowBar } from "@/components/motion";
 import type { FailureCluster } from "@/components/World3D";
-import { TOTAL_COMPANIES } from "@/components/World3D";
+import { TOTAL_COMPANIES, cityOfCompany, clusterOf } from "@/components/World3D";
+import type { PreMortemReport } from "@/lib/types";
 import failures from "@/lib/memory/external_failures.json";
 
 // WebGL solo en cliente: el canvas se carga bajo demanda, nunca en SSR.
@@ -33,7 +34,41 @@ interface ExternalFailureRaw {
 export default function MundoPage() {
   const [selected, setSelected] = useState<FailureCluster | null>(null);
   const [company, setCompany] = useState<string | null>(null);
+  // el PRE-MORTEM ACTUAL: el último informe persistido del historial
+  const [latest, setLatest] = useState<PreMortemReport | null>(null);
   const data = failures as ExternalFailureRaw[];
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const list = await (await fetch("/api/reports?limit=1")).json();
+        const id = list?.reports?.[0]?.id;
+        if (!id) return;
+        const full = await (await fetch(`/api/reports/${id}`)).json();
+        if (alive && full?.verdict) setLatest(full as PreMortemReport);
+      } catch {
+        // sin historial: la página funciona igual con la memoria completa
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // las empresas parecidas que ENCONTRÓ el análisis actual → laten en rojo
+  const matched = useMemo(
+    () => (latest?.externalFailures ?? []).map((f) => f.company).filter((c) => clusterOf(c)),
+    [latest]
+  );
+
+  /** Ir directo a la ubicación exacta de una empresa del análisis actual. */
+  function focusCompany(name: string) {
+    const c = clusterOf(name);
+    if (!c) return;
+    setSelected(c);
+    setCompany(name);
+  }
 
   // al elegir zona: si tiene una sola empresa, abre su expediente directo
   function selectCluster(c: FailureCluster) {
@@ -81,7 +116,7 @@ export default function MundoPage() {
       </section>
 
       <div className="world-wrap">
-        <World3D selected={selected} onSelect={selectCluster} />
+        <World3D selected={selected} highlightCompanies={matched} onSelect={selectCluster} />
       </div>
 
       {selected && (
@@ -142,19 +177,66 @@ export default function MundoPage() {
         </motion.section>
       )}
 
-      <section className="section world-cta">
-        <div className="kicker">// tu turno</div>
-        <h2 className="world-cta-title">¿Tu proyecto repetirá la historia?</h2>
-        <p className="lede prose">
-          Describe lo que vas a construir y el agente lo contrasta contra esta memoria — antes de
-          que tu sede sea otra luz ámbar.
-        </p>
-        <div className="controls">
-          <Link href="/">
-            <button className="primary">[ ejecutar pre-mortem ]</button>
-          </Link>
-        </div>
-      </section>
+      {latest ? (
+        <section className="section world-cta">
+          <div className="field-head">
+            <span>// pre-mortem actual · el último análisis corriendo en el sistema</span>
+            {latest.id && (
+              <Link className="syslink" href={`/informe/${latest.id}`}>
+                abrir informe ↗
+              </Link>
+            )}
+          </div>
+          <div className={`pf-row level-${latest.verdict.level}`} style={{ marginTop: 10 }}>
+            <div className="pf-head">
+              <span className="pf-name">{latest.profile.summary}</span>
+              <span className="pf-index">
+                {latest.verdict.riskIndex}
+                <small>/100 · {latest.verdict.level}</small>
+              </span>
+            </div>
+            <div className="pf-bar">
+              <GrowBar pct={latest.verdict.riskIndex} delay={0.1} />
+            </div>
+            <div className="pf-meta prose">{latest.verdict.headline}</div>
+          </div>
+
+          {matched.length > 0 && (
+            <>
+              <p className="lede prose" style={{ marginTop: 16 }}>
+                Este análisis encontró <b>{matched.length} fracasos reales parecidos</b> — laten en{" "}
+                <b style={{ color: "var(--red)" }}>rojo</b> sobre el planeta, en su ubicación exacta.
+                Tócalos aquí:
+              </p>
+              <div className="presets" style={{ marginTop: 8 }}>
+                {matched.map((name) => (
+                  <button
+                    key={name}
+                    className={`chip-btn ${company === name ? "on" : ""}`}
+                    onClick={() => focusCompany(name)}
+                  >
+                    ☠ {name} — {cityOfCompany(name)}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+      ) : (
+        <section className="section world-cta">
+          <div className="kicker">// tu turno</div>
+          <h2 className="world-cta-title">¿Tu proyecto repetirá la historia?</h2>
+          <p className="lede prose">
+            Aún no hay pre-mortems en el historial. Describe lo que vas a construir y el agente lo
+            contrasta contra esta memoria — antes de que tu sede sea otra luz ámbar.
+          </p>
+          <div className="controls">
+            <Link href="/">
+              <button className="primary">[ ejecutar pre-mortem ]</button>
+            </Link>
+          </div>
+        </section>
+      )}
 
       <div className="footer">
         Globo construido con las texturas 3D del proyecto (albedo, relieve, nubes, luces

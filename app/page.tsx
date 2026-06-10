@@ -158,7 +158,7 @@ export default function Home() {
           <Link href="/informes" className="syslink">
             // informes
           </Link>
-          <span>rev 1.0</span>
+          <span>rev 1.1</span>
         </div>
       </div>
 
