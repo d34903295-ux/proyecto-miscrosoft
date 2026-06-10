@@ -149,6 +149,9 @@ export default function Home() {
           <Link href="/memoria" className="syslink">
             // archivo
           </Link>
+          <Link href="/mundo" className="syslink">
+            // mundo 3d
+          </Link>
           <Link href="/portafolio" className="syslink">
             // portafolio
           </Link>

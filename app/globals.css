@@ -1745,3 +1745,40 @@ button:active:not(:disabled) {
 .aiset select.search {
   appearance: none;
 }
+
+/* ── el mundo de los fracasos (3D) ──────────────────────────── */
+.world-wrap {
+  height: min(72vh, 640px);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: radial-gradient(ellipse at center, #0d0d12 0%, #060608 100%);
+}
+.world-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.world-cta-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 340px) 1fr;
+  gap: 26px;
+  align-items: center;
+}
+@media (max-width: 640px) {
+  .world-cta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.world-notebook {
+  height: 260px;
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+}
+.world-cta-title {
+  font-size: clamp(22px, 4vw, 34px);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin: 8px 0 10px;
+  line-height: 1.05;
+}
