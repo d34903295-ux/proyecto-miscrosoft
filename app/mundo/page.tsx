@@ -117,6 +117,19 @@ export default function MundoPage() {
 
       <div className="world-wrap">
         <World3D selected={selected} highlightCompanies={matched} onSelect={selectCluster} />
+        <div className="world-legend" aria-label="Leyenda del globo">
+          <div className="wl-row">
+            <span className="wl-dot wl-amber" /> archivo completo — siempre encendido: la historia
+            no cambia
+          </div>
+          <div className="wl-row">
+            <span className="wl-dot wl-red" /> tu análisis actual — cambia con cada pre-mortem
+          </div>
+          <div className="wl-row">
+            <span className="wl-dot wl-gold" /> zona seleccionada
+          </div>
+          <div className="wl-row wl-hint">tamaño del punto = empresas muertas en la zona</div>
+        </div>
       </div>
 
       {selected && (
