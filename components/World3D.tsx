@@ -11,8 +11,8 @@
 // ─────────────────────────────────────────────────────────────
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars, useTexture } from "@react-three/drei";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { OrbitControls, QuadraticBezierLine, Stars, useTexture } from "@react-three/drei";
+import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 export interface FailureCluster {
@@ -179,6 +179,47 @@ function Marker({
   );
 }
 
+/** Baliza "tu proyecto": flota sobre el polo (punto conceptual, no geográfico)
+ *  y recibe un arco desde cada zona donde murió un parecido del análisis actual. */
+const BEACON = new THREE.Vector3(0, 1.55, 0);
+
+function ProjectArcs({ clusters }: { clusters: FailureCluster[] }) {
+  const beaconRef = useRef<THREE.Mesh>(null);
+  useFrame(({ clock }) => {
+    if (!beaconRef.current) return;
+    beaconRef.current.rotation.y = clock.elapsedTime * 0.8;
+    beaconRef.current.position.y = BEACON.y + Math.sin(clock.elapsedTime * 1.4) * 0.04;
+  });
+  if (!clusters.length) return null;
+  return (
+    <group>
+      <mesh ref={beaconRef} position={BEACON.toArray()}>
+        <octahedronGeometry args={[0.05]} />
+        <meshBasicMaterial color="#f2b01e" wireframe toneMapped={false} />
+      </mesh>
+      {clusters.map((c) => {
+        const start = latLonToVec3(c.lat, c.lon, 1.03);
+        // punto de control: a medio camino, empujado hacia afuera → arco elevado
+        const mid = start.clone().add(BEACON).multiplyScalar(0.5).normalize().multiplyScalar(1.55);
+        return (
+          <QuadraticBezierLine
+            key={c.area}
+            start={start.toArray()}
+            end={BEACON.toArray()}
+            mid={mid.toArray()}
+            color="#e0574e"
+            lineWidth={1.5}
+            dashed
+            dashScale={14}
+            transparent
+            opacity={0.85}
+          />
+        );
+      })}
+    </group>
+  );
+}
+
 function Earth({
   selected,
   highlightCompanies,
@@ -230,6 +271,12 @@ function Earth({
             onSelect={onSelect}
           />
         ))}
+        {/* arcos: de cada zona del análisis actual hacia la baliza "tu proyecto" */}
+        <ProjectArcs
+          clusters={CLUSTERS.filter((c) =>
+            c.companies.some((e) => highlightCompanies.includes(e.company))
+          )}
+        />
       </group>
       <mesh ref={cloudMesh}>
         <sphereGeometry args={[1.012, 48, 48]} />

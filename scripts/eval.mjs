@@ -17,52 +17,63 @@
 
 const BASE = process.env.EVAL_URL ?? "http://localhost:3000";
 
+// `expect`: la categoría esperada debe estar en el top-3.
+// `forbid`: categorías que NO deben aparecer en el top-3 (control adversarial:
+//           un agente que matchea todo con todo no razona, recuerda mal).
 const GOLDEN = [
   {
     name: "wallet fintech contrarreloj",
     expect: ["Seguridad", "Pagos/conciliación"],
+    forbid: ["Rotación/conocimiento", "Cumplimiento/regulación"],
     description:
       "Somos una fintech y vamos a lanzar una wallet móvil con tarjeta virtual. Hay dos competidores a punto de salir, así que la prioridad es lanzar features rápido y crecer en usuarios de forma agresiva. El endurecimiento de seguridad lo haremos después del lanzamiento.",
   },
   {
     name: "replatform e-commerce con fecha fija",
     expect: ["Time-to-market", "Performance/escala"],
+    forbid: ["Modelo de IA en producción"],
     description:
       "Vamos a reemplazar la tienda online completa de un retailer grande. La fecha de corte está atada a Black Friday porque la campaña de medios ya está comprada y no se puede mover. Si el calendario aprieta, recortaremos pruebas.",
   },
   {
     name: "plataforma de APIs multi-equipo",
     expect: ["Coordinación multi-equipo", "Integración legacy"],
+    forbid: ["Pagos/conciliación"],
     description:
       "Vamos a construir una capa de APIs internas en un banco para que cinco equipos de producto dejen de integrarse punto a punto contra el core legacy. La coordinación entre los varios equipos se hará con un comité de arquitectura.",
   },
   {
     name: "sistema público con rotación",
     expect: ["Rotación/conocimiento", "Integración legacy"],
+    forbid: ["Performance/escala"],
     description:
       "Digitalización de trámites de un organismo de gobierno con plazo regulatorio. El equipo es mixto: gente de planta y consultores externos de una consultora, donde es normal que haya rotación y cambios de personal durante el proyecto.",
   },
   {
     name: "telemetría IoT mono-proveedor",
     expect: ["Dependencia de proveedor", "Calidad de datos"],
+    forbid: ["Pagos/conciliación"],
     description:
       "Plataforma de telemetría en tiempo real para flotas de camiones, con sensores y dispositivos IoT de un único fabricante elegido por precio. El equipo es nuevo en hardware y la apuesta es entrar a un mercado nuevo.",
   },
   {
     name: "copiloto interno sobre documentos",
     expect: ["Seguridad", "Modelo de IA en producción"],
+    forbid: ["Cumplimiento/regulación"],
     description:
       "Queremos un asistente conversacional interno con IA generativa que responda preguntas de los empleados sobre la base documental de la empresa: políticas, contratos y planillas. Conectaremos el índice de búsqueda que ya tenemos para ahorrar tiempo.",
   },
   {
     name: "streaming en vivo consumer",
     expect: ["Performance/escala", "Time-to-market"],
+    forbid: ["Integración legacy"],
     description:
       "App para el público general a la que vamos a agregar streaming en vivo con chat en tiempo real para conciertos, esperando decenas de miles de espectadores concurrentes. Si las pruebas con cientos de usuarios funcionan, escalar debería ser subir instancias.",
   },
   {
     name: "delivery con fecha de campaña",
     expect: ["Adopción/onboarding", "Time-to-market"],
+    forbid: ["Modelo de IA en producción"],
     description:
       "Vamos a lanzar una app móvil de delivery propia para una cadena de restaurantes grande, para dejar de pagar comisiones a los marketplaces. La fecha de lanzamiento está atada a una campaña de marketing nacional, así que es fija. El equipo es nuevo en este dominio y la apuesta es crecer rápido en adopción ofreciendo descuentos.",
   },
@@ -124,6 +135,8 @@ async function main() {
 
   console.log(`Evaluando contra ${BASE} · ${GOLDEN.length} casos dorados\n`);
   let recallHits = 0;
+  let top1Hits = 0;
+  let adversarialClean = 0;
   const evidenceProblems = [];
   const calibrationProblems = [];
   let engine = "?";
@@ -134,10 +147,15 @@ async function main() {
     const top3 = report.risks.slice(0, 3).map((r) => r.failureCategory);
     const hit = g.expect.some((cat) => top3.includes(cat));
     if (hit) recallHits++;
+    // precisión estricta: ¿la categoría esperada es directamente el riesgo #1?
+    if (g.expect.includes(top3[0])) top1Hits++;
+    // control adversarial: las categorías prohibidas NO deben colarse al top-3
+    const leaked = (g.forbid ?? []).filter((cat) => top3.includes(cat));
+    if (leaked.length === 0) adversarialClean++;
     evidenceProblems.push(...checkEvidence(report).map((p) => `[${g.name}] ${p}`));
     calibrationProblems.push(...checkCalibration(report).map((p) => `[${g.name}] ${p}`));
     console.log(
-      `${hit ? "✓" : "✗"} ${g.name}\n    esperaba: ${g.expect.join(" | ")}\n    top-3:    ${top3.join(" · ")}`
+      `${hit ? "✓" : "✗"} ${g.name}\n    esperaba: ${g.expect.join(" | ")}\n    top-3:    ${top3.join(" · ")}${leaked.length ? `\n    ⚠ ADVERSARIAL: se coló ${leaked.join(", ")}` : ""}`
     );
   }
 
@@ -154,6 +172,8 @@ async function main() {
   console.log(`\n──────────────────────────────────────────────`);
   console.log(`motor: ${engine}`);
   console.log(`recuerdo (categoría esperada en top-3): ${recallHits}/${GOLDEN.length} (${pct}%)`);
+  console.log(`precisión estricta (esperada como riesgo #1): ${top1Hits}/${GOLDEN.length}`);
+  console.log(`control adversarial (sin categorías prohibidas en top-3): ${adversarialClean}/${GOLDEN.length}`);
   console.log(`integridad de evidencia: ${evidenceProblems.length === 0 ? "✓ sin problemas" : `✗ ${evidenceProblems.length} problemas`}`);
   for (const p of evidenceProblems) console.log(`   - ${p}`);
   console.log(`calibración: ${calibrationProblems.length === 0 ? "✓ coherente" : `✗ ${calibrationProblems.length} problemas`}`);
@@ -162,7 +182,7 @@ async function main() {
     console.log(`determinismo (stub): ${deterministic ? "✓ misma entrada → mismo reporte" : "✗ NO determinista"}`);
 
   const failed =
-    recallHits < GOLDEN.length || evidenceProblems.length > 0 || calibrationProblems.length > 0 || deterministic === false;
+    recallHits < GOLDEN.length || adversarialClean < GOLDEN.length || evidenceProblems.length > 0 || calibrationProblems.length > 0 || deterministic === false;
   process.exit(failed ? 1 : 0);
 }
 

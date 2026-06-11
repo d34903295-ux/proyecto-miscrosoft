@@ -219,7 +219,9 @@ El sistema está endurecido para operarse de verdad:
 - **Historial persistente con permalinks** — cada pre-mortem queda guardado
   (`/informes`, `/informe/{id}`, API en `/api/reports`). Un pre-mortem que nadie
   relee no previene nada: el registro queda para contrastar contra la realidad.
-- **Memoria institucional VIVA** — `POST /api/memory` agrega casos en runtime
+- **Memoria institucional VIVA** — `POST /api/memory` agrega casos en runtime,
+  y `POST /api/memory/import` importa postmortems masivamente desde **CSV**
+  (validación fila a fila con errores por campo; listas separadas por `|`)
   (validados campo a campo contra las etiquetas del perfilador); el índice
   TF-IDF se reconstruye automáticamente y el caso nuevo es recuperable **en el
   siguiente request**. La persistencia usa un `DocumentStore` con adaptador de
