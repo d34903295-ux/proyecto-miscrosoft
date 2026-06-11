@@ -35,7 +35,7 @@ export async function GET() {
 
   const healthy = Object.values(checks).every((c) => c.ok);
   return NextResponse.json(
-    { status: healthy ? "ok" : "degraded", version: "1.0.0", checks },
+    { status: healthy ? "ok" : "degraded", version: "1.1.0", checks },
     { status: healthy ? 200 : 503 }
   );
 }

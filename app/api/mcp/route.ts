@@ -116,7 +116,7 @@ export async function POST(req: Request) {
         serverInfo: {
           name: "pre-mortem-institucional",
           title: "Pre-Mortem Institucional (Reasoning Agent)",
-          version: "1.0.0",
+          version: "1.1.0",
         },
         instructions:
           "Llama a la herramienta `premortem` con la descripción de un proyecto para obtener " +
