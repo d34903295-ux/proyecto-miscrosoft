@@ -82,10 +82,15 @@ export class FileStore implements DocumentStore {
 
 let storeSingleton: DocumentStore | null = null;
 
-/** Store del proceso. DATA_DIR configura dónde persiste (default: ./data). */
+/**
+ * Store del proceso. DATA_DIR configura dónde persiste. Default: ./data en local;
+ * en entornos serverless con FS de solo lectura (Vercel) cae a /tmp, que es
+ * escribible — así el demo desplegado guarda informes y el health pasa.
+ */
 export function getStore(): DocumentStore {
   if (!storeSingleton) {
-    storeSingleton = new FileStore(process.env.DATA_DIR ?? join(process.cwd(), "data"));
+    const fallback = process.env.VERCEL ? "/tmp/data" : join(process.cwd(), "data");
+    storeSingleton = new FileStore(process.env.DATA_DIR ?? fallback);
   }
   return storeSingleton;
 }
