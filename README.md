@@ -137,6 +137,17 @@ un link clickeable al registro completo para **abrir y verificar**.
 > capa de recuperación agéntica de conocimiento de Azure AI Foundry, construida
 > sobre Azure AI Search — como su memoria institucional real.
 
+**Dos niveles de integración Foundry (elige según tu acceso):**
+
+1. **Modelo de Foundry (mínimo, GRATIS, sin Azure)** — los jueces confirmaron que
+   el mínimo es *"at least one Microsoft Foundry hosted model"*. Con
+   `LLM_PROVIDER=foundry`, el agente razona con **Foundry Local** (modelos de
+   Microsoft Foundry corriendo en tu máquina, sin cuenta de Azure). El reporte
+   muestra `razonamiento: foundry` como prueba del backend en vivo.
+   👉 **Guía paso a paso: [`SETUP-FOUNDRY-IQ.md`](./SETUP-FOUNDRY-IQ.md).**
+2. **Foundry IQ retrieval (upgrade, requiere Azure)** — `RETRIEVER=foundryiq`
+   conecta la memoria a una *knowledge base* real de Foundry IQ (abajo).
+
 Cuando `RETRIEVER=foundryiq`, el agente **no** usa la memoria local: llama en vivo
 al endpoint de **agentic retrieval** de una *knowledge base* de Foundry IQ
 (contrato verificado, jun-2026):

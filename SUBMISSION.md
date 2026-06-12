@@ -42,16 +42,19 @@ npm install && npm run dev   # corre sin API keys (motor stub determinista)
 2. `// portafolio` → "cargar ejemplo" → 3 proyectos rankeados por riesgo en paralelo
 3. `npm test` (22 ✓) · `npm run eval` (8/8) — el razonamiento se mide
 
-## Microsoft IQ (requisito del hackathon): **Foundry IQ**
+## Microsoft IQ (requisito del hackathon): **Foundry**
 
-Integra **Microsoft Foundry IQ** como memoria institucional real. Con
-`RETRIEVER=foundryiq`, cada pre-mortem llama en vivo al *agentic retrieval* de una
-knowledge base de Foundry IQ
-(`POST /knowledgebases/{kb}/retrieve`, api-version 2026-05-01-preview) y mapea
-`references[].sourceData` → `RetrievalHit`. Provisión en ~30 min con cuenta Azure
-gratuita (sin licencia Copilot): `npm run seed:foundryiq` crea índice + knowledge
-source + knowledge base. Fallback real garantizado: `npm run seed:azure` +
-`RETRIEVER=azuresearch` (Azure AI Search clásico, el motor de Foundry IQ).
+Los jueces confirmaron que el mínimo es *"at least one Microsoft Foundry hosted
+model"* con backend en vivo. Dos niveles, ambos implementados:
+
+- **Modelo de Foundry (GRATIS, sin Azure):** `LLM_PROVIDER=foundry` → el agente
+  razona con **Foundry Local** (modelos de Microsoft Foundry en la máquina). El
+  reporte muestra `razonamiento: foundry` como prueba en vivo. Guía:
+  `SETUP-FOUNDRY-IQ.md`.
+- **Foundry IQ retrieval (upgrade, con Azure):** `RETRIEVER=foundryiq` → cada
+  pre-mortem llama al *agentic retrieval* de una knowledge base de Foundry IQ
+  (`POST /knowledgebases/{kb}/retrieve`), mapeando `references[].sourceData` →
+  `RetrievalHit`. Provisión: `npm run seed:foundryiq`.
 
 ## Arquitectura en una línea
 
@@ -89,7 +92,7 @@ auth + rate limit + health + métricas Prometheus · Docker + CI.
 | Requisito | Estado |
 |---|---|
 | Track elegido (Reasoning Agents) | ✅ |
-| **Integra ≥1 Microsoft IQ** (Foundry IQ) | ✅ `RETRIEVER=foundryiq` → agentic retrieval real |
+| **Integra Microsoft Foundry** (modelo hosted) | ✅ `LLM_PROVIDER=foundry` (Foundry Local, gratis) · upgrade: `RETRIEVER=foundryiq` |
 | Repositorio **público** | ⬜ **hazlo público antes de entregar** (GitHub → Settings → Visibility) |
 | README presente | ✅ |
 | 🎥 Video demo (2-3 min) | ⬜ **graba y pega el enlace arriba** |

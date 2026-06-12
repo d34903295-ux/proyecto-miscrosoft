@@ -267,9 +267,9 @@ function parseJSON(content: string): any {
   return JSON.parse(cleaned);
 }
 
-// ── OpenAI / Azure / GitHub Models / Ollama / OpenRouter ──────
+// ── OpenAI / Azure / GitHub Models / Foundry Local / Ollama / OpenRouter ──
 // Todos hablan el mismo protocolo chat/completions; cambia URL, auth y modelo.
-type OpenAICompatMode = "openai" | "azure" | "github" | "ollama" | "openrouter";
+type OpenAICompatMode = "openai" | "azure" | "github" | "foundry" | "ollama" | "openrouter";
 
 /** Override por request (BYOK desde el frontend): nunca se persiste ni se loguea. */
 export interface LLMOverride {
@@ -312,6 +312,14 @@ class OpenAIReasoningLLM extends ChatReasoningLLM {
       url = "https://models.github.ai/inference/chat/completions";
       headers["Authorization"] = `Bearer ${process.env.GITHUB_TOKEN}`;
       model = process.env.GITHUB_MODEL ?? "openai/gpt-4o-mini";
+    } else if (this.mode === "foundry") {
+      // Foundry Local: modelos de Microsoft Foundry corriendo en ESTA máquina,
+      // GRATIS y sin cuenta de Azure. Endpoint OpenAI-compatible; el puerto es
+      // dinámico (míralo con `foundry service status`). Esto satisface el mínimo
+      // de integración Foundry exigido por el hackathon: "a Foundry hosted model".
+      const base = (process.env.FOUNDRY_LOCAL_ENDPOINT ?? "http://localhost:5272").replace(/\/(v1\/?)?$/, "");
+      url = `${base}/v1/chat/completions`;
+      model = process.env.FOUNDRY_LOCAL_MODEL ?? "qwen2.5-0.5b";
     } else if (this.mode === "ollama") {
       // Ollama local (endpoint compatible con OpenAI). Razonamiento 100% offline.
       const base = (process.env.OLLAMA_HOST ?? "http://localhost:11434").replace(/\/$/, "");
@@ -323,18 +331,24 @@ class OpenAIReasoningLLM extends ChatReasoningLLM {
       model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
     }
 
+    // El modo JSON nativo (response_format) no siempre lo soportan los modelos
+    // locales (Foundry Local / Ollama); ahí confiamos en el parseo robusto +
+    // la instrucción "responde SOLO JSON". En la nube sí lo pedimos.
+    const supportsJsonMode = this.mode !== "foundry" && this.mode !== "ollama";
+    const body: Record<string, any> = {
+      model,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      temperature: 0.2,
+    };
+    if (supportsJsonMode) body.response_format = { type: "json_object" };
+
     const res = await fetch(url, {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-        temperature: 0.2,
-        response_format: { type: "json_object" },
-      }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`${this.name} HTTP ${res.status}: ${await res.text()}`);
     const data = await res.json();
@@ -392,6 +406,10 @@ export function getLLM(override?: LLMOverride): ReasoningLLM {
       if (process.env.GITHUB_TOKEN) return new OpenAIReasoningLLM("github");
       console.warn("[llm] GITHUB_TOKEN ausente — uso stub.");
       return new StubReasoningLLM();
+    case "foundry":
+      // Foundry Local es un servicio local (sin key); si no responde, cada
+      // llamada cae al stub por el catch. Modelo de Foundry, gratis y sin Azure.
+      return new OpenAIReasoningLLM("foundry");
     case "ollama":
       // sin key: si el host no responde, cada llamada cae al stub por el catch.
       return new OpenAIReasoningLLM("ollama");
