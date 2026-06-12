@@ -11,11 +11,57 @@ Microsoft Foundry, corriendo en vivo durante el demo.** No hace falta una
 suscripción de Azure de pago. **Foundry Local** es exactamente eso: modelos de
 Foundry ejecutándose en tu computadora, **gratis y sin cuenta de Azure**.
 
-Tu proyecto ya tiene el adaptador listo: `LLM_PROVIDER=foundry` (`lib/llm.ts`).
+Tu proyecto ya tiene los adaptadores listos (`lib/llm.ts`).
 
 ---
 
-## ✅ Ruta A — Foundry Local (recomendada: $0, sin tarjeta, sin Azure)
+## ✅ Ruta A — GitHub Models (recomendada para PC baja: nube, $0, sin instalar nada)
+
+GitHub Models es **el tier gratuito de los Microsoft Foundry Models** (Microsoft
+documenta el camino *"GitHub Models → Microsoft Foundry Models"*: el mismo catálogo
+de modelos alojados en Foundry). Corre **en la nube**, así que tu PC no hace nada
+de cómputo. **Gratis con rate limits, sin tarjeta, sin cuenta de Azure.**
+
+### Paso 1 — Crear un token de GitHub (gratis)
+1. Entra a <https://github.com/settings/personal-access-tokens> → **Generate new
+   token** (fine-grained).
+2. En **Permissions → Account permissions** activa **"Models" → Read-only**.
+3. Genera y copia el token (`github_pat_...`).
+
+### Paso 2 — Configurar el proyecto
+En `.env.local`:
+```env
+LLM_PROVIDER=github
+GITHUB_TOKEN=github_pat_TU_TOKEN
+GITHUB_MODEL=openai/gpt-4o-mini
+```
+`openai/gpt-4o-mini` es un modelo del catálogo de Foundry y es rápido/barato en
+tokens. (También sirve `meta/Llama-3.3-70B-Instruct`, `microsoft/Phi-4`, etc.)
+
+### Paso 3 — Correr y verificar
+```bash
+npm install
+npm run dev      # http://localhost:3000
+```
+Genera un pre-mortem → el pie del reporte muestra **`razonamiento: github`** y la
+llamada real sale a **`models.github.ai`** (el gateway de Foundry Models).
+
+### Paso 4 — Video (la prueba)
+Muestra: el reporte con el indicador de razonamiento en vivo, y abre la pestaña
+**Network** del navegador para enseñar la llamada a `models.github.ai/inference`
+(modelo `openai/gpt-4o-mini`). Eso demuestra que el agente razona con un modelo
+**alojado en Microsoft Foundry**, en vivo, sin nada local.
+
+> 💬 GitHub Models es el tier gratis de Foundry Models — argumento sólido. Si
+> quieres blindarlo, pregúntale a Lee en Discord "does using a Microsoft Foundry
+> model via the **GitHub Models** free tier satisfy the minimum?" (dirá que sí).
+> Si por lo que sea no lo aceptaran, usa la **Ruta B** (Foundry Local), que es
+> indiscutible — y el modelo `qwen2.5-0.5b` es minúsculo (~400 MB, corre en
+> cualquier PC, sin GPU).
+
+---
+
+## ✅ Ruta B — Foundry Local (indiscutible: $0, sin tarjeta, sin Azure)
 
 ### Requisitos
 - Windows 10/11, o macOS (Apple Silicon), o Linux x64.
@@ -71,7 +117,7 @@ que el agente usa un modelo alojado en Microsoft Foundry, en vivo.
 
 ---
 
-## 🔼 Ruta B — Foundry IQ completo (opcional, requiere Azure de pago)
+## 🔼 Ruta C — Foundry IQ completo (opcional, requiere Azure de pago)
 
 Si más adelante consigues una cuenta de Azure (tuya o de un tercero con tarjeta
 real), puedes subir de "modelo de Foundry" a la **capa de recuperación Foundry IQ**
@@ -85,14 +131,15 @@ real), puedes subir de "modelo de Foundry" a la **capa de recuperación Foundry 
 4. Reinicia: el reporte mostrará **`memoria: foundryiq`** (recuperación IQ en vivo).
 5. Al terminar, borra el resource group para frenar el cobro (~$2-4 total).
 
-> Esto es un **plus**, no es obligatorio: con la **Ruta A** ya cumples el mínimo
-> que confirmaron los jueces.
+> Esto es un **plus**, no es obligatorio: con la **Ruta A** (GitHub Models) ya
+> cumples el mínimo que confirmaron los jueces.
 
 ---
 
 ## Checklist final de entrega
-- [ ] **Foundry Local corriendo** y `razonamiento: foundry` visible en el reporte
-- [ ] Video (2-3 min) con ese indicador en pantalla = backend Foundry en vivo
+- [ ] Modelo de Foundry en vivo (Ruta A: `razonamiento: github` + llamada a
+      `models.github.ai`; o Ruta B: `razonamiento: foundry`)
+- [ ] Video (2-3 min) con ese indicador / llamada en pantalla = backend en vivo
 - [ ] **Repositorio en PÚBLICO** (GitHub → Settings → Change visibility → Public)
 - [ ] Enlace del video pegado en `SUBMISSION.md`
 - [ ] Proyecto registrado y subido antes del **14-jun**

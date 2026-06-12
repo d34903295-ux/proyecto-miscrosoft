@@ -140,10 +140,13 @@ un link clickeable al registro completo para **abrir y verificar**.
 **Dos niveles de integración Foundry (elige según tu acceso):**
 
 1. **Modelo de Foundry (mínimo, GRATIS, sin Azure)** — los jueces confirmaron que
-   el mínimo es *"at least one Microsoft Foundry hosted model"*. Con
-   `LLM_PROVIDER=foundry`, el agente razona con **Foundry Local** (modelos de
-   Microsoft Foundry corriendo en tu máquina, sin cuenta de Azure). El reporte
-   muestra `razonamiento: foundry` como prueba del backend en vivo.
+   el mínimo es *"at least one Microsoft Foundry hosted model"*. Dos formas, ambas
+   sin tarjeta:
+   - `LLM_PROVIDER=github` → **GitHub Models**, el tier gratuito de los Microsoft
+     Foundry Models (nube, **sin instalar nada**, ideal para PC modesta). Reporte:
+     `razonamiento: github` + llamada en vivo a `models.github.ai`.
+   - `LLM_PROVIDER=foundry` → **Foundry Local** (modelos de Foundry en tu máquina,
+     offline). Reporte: `razonamiento: foundry`.
    👉 **Guía paso a paso: [`SETUP-FOUNDRY-IQ.md`](./SETUP-FOUNDRY-IQ.md).**
 2. **Foundry IQ retrieval (upgrade, requiere Azure)** — `RETRIEVER=foundryiq`
    conecta la memoria a una *knowledge base* real de Foundry IQ (abajo).
