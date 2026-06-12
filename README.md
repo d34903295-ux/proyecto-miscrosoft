@@ -130,85 +130,78 @@ un link clickeable al registro completo para **abrir y verificar**.
 
 ---
 
-## Integración con Microsoft Work IQ (y el puente sintético)
+## Microsoft IQ — Integración con **Foundry IQ** (capa de IQ exigida por el hackathon)
 
-El proyecto integra **Microsoft Work IQ**, la capa de memoria detrás de M365
-Copilot (anunciada en Ignite, 18-nov-2025). Estado verificado a **jun-2026**:
+> La regla del Agents League exige integrar **al menos una capa Microsoft IQ**
+> (Foundry IQ, Work IQ o Fabric IQ). Este proyecto integra **Foundry IQ** — la
+> capa de recuperación agéntica de conocimiento de Azure AI Foundry, construida
+> sobre Azure AI Search — como su memoria institucional real.
 
-- **Work IQ API** está en **preview** (protocolos A2A y MCP); su **REST API está
-  "coming soon"** y la **GA es el 16-jun-2026** — *después* del cierre del
-  hackathon (14-jun). Auth **delegada/OBO únicamente** (no app-only) y **exige
-  licencia M365 Copilot**. [[1]](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/api-overview) [[2]](https://learn.microsoft.com/en-us/microsoft-copilot-studio/use-work-iq)
-- La superficie pública más cercana y **GA** es la **Copilot Retrieval API**
-  (`POST https://graph.microsoft.com/v1.0/copilot/retrieval`), RAG sobre
-  SharePoint/OneDrive/connectors. Gratis con licencia Copilot, o **PAYG
-  ($0.10/llamada)** que **igual requiere ≥1 licencia Copilot en el tenant**. [[3]](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/api/ai-services/retrieval/copilotroot-retrieval)
-- El **tenant de desarrollo E5 gratuito** está restringido desde ene-2024 a
-  suscriptores de Visual Studio/partners, y **no incluye Copilot/Work IQ**.
+Cuando `RETRIEVER=foundryiq`, el agente **no** usa la memoria local: llama en vivo
+al endpoint de **agentic retrieval** de una *knowledge base* de Foundry IQ
+(contrato verificado, jun-2026):
 
-**Conclusión:** el acceso real a la memoria organizacional vía Work IQ es
-**inviable de cero en 5 días en solitario** (muro de licencia + REST no-GA a
-tiempo). Por eso la arquitectura usa **una sola interfaz `MemoryRetriever`**
-cuyo tipo de retorno es **espejo exacto del hit del Copilot Retrieval API**
-(`webUrl`, `extracts[].text` + `relevanceScore`, `resourceType`,
-`sensitivityLabel`), con implementaciones intercambiables:
+```
+POST https://<servicio>.search.windows.net/knowledgebases/<kb>/retrieve?api-version=2026-05-01-preview
+Authorization: Bearer <token search.azure.com>      # o  api-key: <admin key>
+{ "messages":[{"role":"user","content":[{"type":"text","text":"<proyecto + dimensiones>"}]}],
+  "knowledgeSourceParams":[{"knowledgeSourceName":"<ks>","kind":"searchIndex",
+     "includeReferences":true,"includeReferenceSourceData":true,"maxOutputDocuments":k}],
+  "outputMode":"extractedData" }
+```
 
-| Implementación      | Estado | Qué hace |
-|---------------------|--------|----------|
-| `SyntheticRetriever`| ✅ activa | Memoria local de proyectos pasados; TF-IDF + solapamiento de dimensiones. `relevanceScore` = coseno, igual que la API real. |
-| `WorkIQRetriever`   | 🔌 stub | Copilot Retrieval API real (auth delegada/OBO). Mismo contrato → *drop-in*. |
-| `FoundryIQRetriever`| 🔌 stub | **Azure AI Foundry IQ** — la ruta de datos reales **factible** para el track Reasoning Agents (free tier + $200 de crédito Azure, **sin** licencia Copilot). |
+Foundry IQ planea la consulta con un modelo, busca en sus *knowledge sources* y
+devuelve grounding extractivo con `references[]`; mapeamos `references[].sourceData`
+1:1 a nuestro `RetrievalHit`, así que **el resto del agente y la UI no cambian**
+(`lib/retrieval.ts` → `FoundryIQRetriever`). Es viable con una **cuenta Azure
+gratuita ($200 de crédito), SIN licencia Copilot**.
 
-Como **el resto del agente depende solo de la interfaz**, cambiar de datos
-sintéticos a memoria real es un *swap* de implementación, no una reescritura.
-
-> ⚠️ **Sobre el track (verificar en las reglas oficiales):** la investigación
-> sugiere que en Agents League el track **Reasoning Agents** se centra en **Azure
-> AI Foundry / Foundry IQ**, mientras que **Work IQ** se asocia al track
-> **Enterprise**. [[4]](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/what-is-foundry-iq) Confírmalo en las reglas oficiales antes de la entrega
-> (cierra el 14-jun): si el track exige Foundry, prioriza el `FoundryIQRetriever`
-> (real y gratis); si exige Work IQ, el `WorkIQRetriever` y este relato de
-> arquitectura lo cubren. **Este build sirve a ambas lecturas.**
->
-> Nota de stack: el **Microsoft Agent Framework (MAF)** GA es **Python/.NET
-> únicamente — no hay SDK de TypeScript**. Nuestra app Next.js implementa el
-> razonamiento multi-paso propio y puede invocar Foundry IQ / Azure AI Foundry
-> por **REST**; es un agente de razonamiento legítimo sin depender del SDK de MAF.
-
-### Memoria real con Azure AI Search / Foundry IQ (✅ ya implementado)
-
-La ruta de datos reales **factible y gratis** para el track Reasoning Agents ya
-está codificada (`AzureSearchRetriever`, el motor sobre el que corre Foundry IQ).
-Para activarla:
+### Provisionar Foundry IQ en ~30 min (real, gratis)
 
 ```bash
-# 1. Crea un servicio de Azure AI Search (free tier sirve) en el portal de Azure.
-# 2. En .env.local:
+# 1. Crea un servicio de Azure AI Search (free/basic tier) en el portal de Azure.
+# 2. (Recomendado) crea un recurso de Azure OpenAI y despliega un modelo chat
+#    (p.ej. gpt-4o-mini) — habilita el planeo agéntico de consultas de Foundry IQ.
+# 3. En .env.local:
 #    AZURE_SEARCH_ENDPOINT=https://TU-BUSQUEDA.search.windows.net
 #    AZURE_SEARCH_API_KEY=<admin key>
 #    AZURE_SEARCH_INDEX=company-memory
-# 3. Crea el índice y sube los 30 casos:
-npm run seed:azure
-# 4. Activa el recuperador real y reinicia:
+#    FOUNDRY_KS_NAME=company-memory-ks
+#    FOUNDRY_KB_NAME=company-memory-kb
+#    AZURE_OPENAI_ENDPOINT=...  AZURE_OPENAI_API_KEY=...  AZURE_OPENAI_DEPLOYMENT=gpt-4o-mini
+# 4. Provisiona índice + knowledge source + knowledge base de Foundry IQ:
+npm run seed:foundryiq
+# 5. Activa el recuperador real y reinicia:
 #    RETRIEVER=foundryiq
 npm run dev
 ```
 
-A partir de ahí el agente consulta memoria **real** en Azure AI Search; la UI y el
-razonamiento no cambian (mismo contrato `MemoryRetriever`). Para subirlo a Foundry
-IQ "gestionado", conecta ese mismo índice como *knowledge source* de Foundry IQ.
+A partir de ahí, cada pre-mortem consulta **Foundry IQ en vivo**; el campo
+`memoria:` del reporte muestra `foundryiq`. Para razonamiento 100% real, además
+pon `LLM_PROVIDER=azure` con ese mismo Azure OpenAI (o `LLM_PROVIDER=github`,
+gratis): así **retrieval y razonamiento** son reales de punta a punta.
 
-### Cambiar a Work IQ / Copilot Retrieval API (requiere licencia Copilot)
+### Implementaciones del `MemoryRetriever` (interfaz única)
 
-App registration en Entra con auth **delegada** (`Files.Read.All` +
-`Sites.Read.All`, o `ExternalItem.Read.All` para connectors); asegura ≥1 licencia
-M365 Copilot; implementa `WorkIQRetriever.retrieve()`
-(`POST https://graph.microsoft.com/v1.0/copilot/retrieval` con
-`{ queryString, dataSource, filterExpression, maximumNumberOfResults }`) y mapea
-`retrievalHits[]` a `RetrievalHit`. `RETRIEVER=workiq`. (Work IQ REST GA: 16-jun-2026.)
+El tipo de retorno (`RetrievalHit`) es **espejo del hit del Copilot Retrieval
+API** (`webUrl`, `extracts[].text` + `relevanceScore`, `resourceType`,
+`sensitivityLabel`), así que cambiar de un origen a otro es un *swap*, no una
+reescritura:
 
-> Las superficies de Work IQ / Copilot / Foundry se mueven rápido; confirma
-> endpoint, versión y *scopes* en Microsoft Learn antes de implementar.
+| Implementación      | Estado | Qué hace |
+|---------------------|--------|----------|
+| `FoundryIQRetriever`| ✅ **integración IQ** | **Microsoft Foundry IQ** real: agentic retrieval sobre una knowledge base (`/knowledgebases/{kb}/retrieve`). `npm run seed:foundryiq` → `RETRIEVER=foundryiq`. |
+| `AzureSearchRetriever`| ✅ real (fallback) | Azure AI Search clásico (el motor de Foundry IQ, expuesto directo). Solo necesita el servicio de Search, sin Azure OpenAI. `npm run seed:azure` → `RETRIEVER=azuresearch`. |
+| `SyntheticRetriever`| ✅ default offline | Memoria local; TF-IDF + solapamiento de dimensiones. Corre sin nube, para demo out-of-the-box. |
+| `WorkIQRetriever`   | 🔌 stub | Copilot Retrieval API real (auth delegada/OBO; requiere licencia M365 Copilot, REST GA 16-jun-2026). Mismo contrato → *drop-in*. |
+
+> Nota de stack: el **Microsoft Agent Framework (MAF)** GA es **Python/.NET
+> únicamente — no hay SDK de TypeScript**. Esta app Next.js implementa el
+> razonamiento multi-paso propio e invoca **Foundry IQ por REST**; es un agente
+> de razonamiento legítimo sin depender del SDK de MAF.
+>
+> Las superficies de Foundry IQ / Work IQ se mueven rápido; si una api-version
+> cambia, confirma endpoint y versión en Microsoft Learn (`agentic-retrieval`).
 
 ---
 
@@ -234,7 +227,7 @@ El sistema está endurecido para operarse de verdad:
 - **Observabilidad** — logs estructurados JSON por línea, `/api/health` con
   checks reales (memoria cargada, store escribible, config) para probes de
   Kubernetes/App Service, y `/api/metrics` en formato Prometheus.
-- **Calidad** — 19 tests unitarios (`npm test`, runner nativo de Node + tsx)
+- **Calidad** — 22 tests unitarios (`npm test`, runner nativo de Node + tsx)
   sobre similitud, perfilado, gaps, validación, store y el agente completo
   (incluye determinismo y la regla "no inventa"), además del eval de
   razonamiento (`npm run eval`).
@@ -251,7 +244,7 @@ El sistema está endurecido para operarse de verdad:
   Slack (resumen + permalink), fire-and-forget con timeout.
 
 ```bash
-npm test          # tests unitarios (19)
+npm test          # tests unitarios (22)
 npm run eval      # evaluación del razonamiento (golden set 8/8)
 docker compose up # producción en contenedor con volumen persistente
 ```
@@ -324,7 +317,7 @@ curl -s -X POST http://localhost:3000/api/mcp \
 │   └── memory/
 │       ├── company_memory.json    # memoria sembrada de la empresa (30 casos)
 │       └── external_failures.json # fracasos públicos reales (con fuente verificable)
-├── tests/                     # 19 tests unitarios (node:test + tsx)
+├── tests/                     # 22 tests unitarios (node:test + tsx)
 ├── scripts/
 │   ├── eval.mjs               # harness de evaluación: golden set + integridad + calibración
 │   └── seed-azure-search.mjs  # sube la memoria a un índice de Azure AI Search
@@ -374,14 +367,29 @@ Si falta la key, el sistema cae automáticamente al `stub` (nunca se rompe).
 
 ---
 
+## Qué es real y qué es de ejemplo (honestidad)
+
+- ✅ **Real**: el razonamiento multi-paso, el retrieval, la evaluación, la
+  persistencia, el endpoint MCP, las APIs y la **integración con Foundry IQ**
+  (`RETRIEVER=foundryiq` → el agente consulta una knowledge base real de Foundry
+  IQ; ver el runbook arriba). Con `LLM_PROVIDER=azure`/`github`, el razonamiento
+  también usa un LLM real.
+- 🧪 **De ejemplo (semilla)**: los **30 casos de la memoria** son un corpus
+  curado para demostrar el patrón. No son confidenciales ni inventan resultados
+  de terceros. Esos mismos 30 casos son los que `npm run seed:foundryiq` carga en
+  Foundry IQ — la diferencia es que entonces viven y se recuperan en la nube real.
+- ✅ **Datos públicos verificables**: los 32 fracasos de empresas reales
+  (`external_failures.json`) llevan fuente citada cada uno.
+
 ## Limitaciones (MVP honesto)
 
-- La memoria es **sintética** (30 casos) para demostrar el patrón; el
-  `WorkIQRetriever` es el camino a memoria real.
-- La recuperación es TF-IDF + dimensiones (no embeddings densos): suficiente para
-  decenas/cientos de registros; se puede subir a embeddings sin tocar el agente.
-- El `stub` razona por plantilla determinista; un LLM real mejora el matiz del
-  mapeo manteniendo la regla de no inventar.
+- El default `synthetic` corre sin nube para que el demo arranque en frío; la
+  memoria real se activa con `RETRIEVER=foundryiq` (Foundry IQ) tras el seed.
+- La recuperación local es TF-IDF + dimensiones (no embeddings densos): suficiente
+  para decenas/cientos de registros. Bajo Foundry IQ, la búsqueda la hace Azure
+  AI Search (semantic ranker) sin tocar el agente.
+- El `stub` razona por plantilla determinista; un LLM real (Azure OpenAI / GitHub
+  Models) mejora el matiz del mapeo manteniendo la regla de no inventar.
 
 ## Licencia
 
