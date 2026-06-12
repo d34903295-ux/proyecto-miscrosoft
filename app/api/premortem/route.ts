@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { analyzeProject, parseDepth } from "@/lib/analyze";
-import { llmFromHeaders } from "@/lib/byok";
 import { guard } from "@/lib/guard";
 import { inc, log, observe } from "@/lib/logger";
 
@@ -37,8 +36,7 @@ export async function POST(req: Request) {
       description,
       depth,
       body?.save !== false,
-      new URL(req.url).origin,
-      llmFromHeaders(req)
+      new URL(req.url).origin
     );
 
     const ms = Date.now() - t0;

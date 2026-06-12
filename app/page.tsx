@@ -6,7 +6,12 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { EASE, Reveal } from "@/components/motion";
 import type { PreMortemReport } from "@/lib/types";
-import AISettings, { llmHeaders } from "@/components/AISettings";
+import EngineStatus from "@/components/EngineStatus";
+import Clock from "@/components/Clock";
+import ScrollProgress from "@/components/ScrollProgress";
+import Tilt from "@/components/Tilt";
+import { t, useLang, type Lang } from "@/lib/i18n";
+import failures from "@/lib/memory/external_failures.json";
 
 // El reporte (la parte más pesada de la UI) se carga bajo demanda: la página
 // inicial baja menos JS y el bundle del reporte llega mientras el agente analiza.
@@ -16,12 +21,7 @@ const Report = dynamicImport(() => import("@/components/Report"), {
 
 const MAX_QUERY = 1500; // límite real del Copilot Retrieval API (queryString)
 
-const STAGES = [
-  "perfilando el proyecto",
-  "recuperando memoria institucional",
-  "mapeando riesgos a casos reales",
-  "rankeando por severidad histórica",
-];
+const STAGE_KEYS = ["stage1", "stage2", "stage3", "stage4"] as const;
 
 const PRESETS: { label: string; text: string }[] = [
   {
@@ -43,12 +43,13 @@ const PRESETS: { label: string; text: string }[] = [
 ];
 
 const DEPTHS = [
-  { key: "rapido", label: "rápido", hint: "3 riesgos, top 6 casos" },
-  { key: "estandar", label: "estándar", hint: "6 riesgos, top 10 casos" },
-  { key: "profundo", label: "profundo", hint: "10 riesgos, top 16 casos" },
+  { key: "rapido", labelKey: "depthFast", hint: "3 riesgos, top 6 casos" },
+  { key: "estandar", labelKey: "depthStd", hint: "6 riesgos, top 10 casos" },
+  { key: "profundo", labelKey: "depthDeep", hint: "10 riesgos, top 16 casos" },
 ] as const;
 
 export default function Home() {
+  const [lang, setLang] = useLang();
   const [description, setDescription] = useState("");
   const [depth, setDepth] = useState<string>("estandar");
   const [report, setReport] = useState<PreMortemReport | null>(null);
@@ -74,11 +75,11 @@ export default function Home() {
     }
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
-      setError("Este navegador no soporta dictado por voz — escribe la descripción.");
+      setError(t(lang, "micUnsupported"));
       return;
     }
     const rec = new SR();
-    rec.lang = "es-ES";
+    rec.lang = lang === "en" ? "en-US" : "es-ES";
     rec.continuous = true;
     rec.interimResults = false;
     rec.onresult = (e: any) => {
@@ -101,7 +102,7 @@ export default function Home() {
     if (loading) {
       setStage(0);
       timerRef.current = setInterval(() => {
-        setStage((s) => Math.min(s + 1, STAGES.length - 1));
+        setStage((s) => Math.min(s + 1, STAGE_KEYS.length - 1));
       }, 650);
     } else if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -123,7 +124,7 @@ export default function Home() {
     try {
       const res = await fetch("/api/premortem", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...llmHeaders() },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description, depth }),
       });
       const data = await res.json();
@@ -141,71 +142,81 @@ export default function Home() {
 
   return (
     <div className="shell">
+      <ScrollProgress />
       <div className="sysbar">
         <div className="brand">
           PRE-MORTEM<b>/</b>INSTITUCIONAL
         </div>
         <div className="sys-right">
           <Link href="/memoria" className="syslink">
-            // archivo
+            {t(lang, "navArchive")}
           </Link>
           <Link href="/mundo" className="syslink">
-            // mundo 3d
+            {t(lang, "navWorld")}
           </Link>
           <Link href="/portafolio" className="syslink">
-            // portafolio
+            {t(lang, "navPortfolio")}
           </Link>
           <Link href="/informes" className="syslink">
-            // informes
+            {t(lang, "navReports")}
           </Link>
-          <span>rev 1.1</span>
+          <button
+            className="lang-toggle"
+            onClick={() => setLang(lang === "es" ? "en" : "es")}
+            aria-label={lang === "es" ? "Switch to English" : "Cambiar a español"}
+            title={lang === "es" ? "Switch to English" : "Cambiar a español"}
+          >
+            {lang === "es" ? "ES│en" : "es│EN"}
+          </button>
+          <Clock lang={lang} />
         </div>
       </div>
 
       <div className="statusline">
         {loading ? (
           <>
-            <span className="run">&gt; {STAGES[stage]}…</span>
+            <span className="run">&gt; {t(lang, STAGE_KEYS[stage])}…</span>
             <span className="cursor" />
           </>
         ) : report ? (
           <>
-            <span className="ok">&gt; análisis completo</span>
-            {cached && <span className="ok"> · instantáneo (caché)</span>} · {report.casesInspected}{" "}
-            casos inspeccionados · motor {report.generatedWith} · memoria {report.retrieverUsed}
+            <span className="ok">{t(lang, "done")}</span>
+            {cached && <span className="ok">{t(lang, "cachedTag")}</span>} · {report.casesInspected}{" "}
+            {t(lang, "inspected")} · {t(lang, "engine")} {report.generatedWith} · {t(lang, "memory")}{" "}
+            {report.retrieverUsed}
             {report.id && (
               <>
                 {" · "}
                 <Link className="syslink" href={`/informe/${report.id}`}>
-                  permalink ↗
+                  {t(lang, "permalink")}
                 </Link>
               </>
             )}
           </>
         ) : (
           <>
-            &gt; sistema listo — pega la descripción del proyecto para iniciar el pre-mortem
+            {t(lang, "ready")}
             <span className="cursor" />
           </>
         )}
       </div>
 
-      <Hero />
+      <Hero lang={lang} />
 
       <section className="section no-print" style={{ paddingTop: 0 }}>
         <Reveal>
           <div className="howto">
             <div className="howto-step">
-              <span className="howto-n">01</span> describe tu proyecto
-              <small>en tus palabras, o díctalo</small>
+              <span className="howto-n">01</span> {t(lang, "step1")}
+              <small>{t(lang, "step1s")}</small>
             </div>
             <div className="howto-step">
-              <span className="howto-n">02</span> el agente recuerda
-              <small>busca proyectos pasados que fracasaron parecido</small>
+              <span className="howto-n">02</span> {t(lang, "step2")}
+              <small>{t(lang, "step2s")}</small>
             </div>
             <div className="howto-step">
-              <span className="howto-n">03</span> decide con evidencia
-              <small>cada riesgo trae su caso real y su mitigación</small>
+              <span className="howto-n">03</span> {t(lang, "step3")}
+              <small>{t(lang, "step3s")}</small>
             </div>
           </div>
         </Reveal>
@@ -213,7 +224,7 @@ export default function Home() {
 
       <section className="section no-print">
         <div className="field-head">
-          <span>&gt; describe_el_proyecto</span>
+          <span>{t(lang, "fieldHead")}</span>
           <span className={over ? "over" : undefined}>
             {description.length} / {MAX_QUERY}
           </span>
@@ -228,12 +239,12 @@ export default function Home() {
             }
           }}
           spellCheck={false}
-          aria-label="Describe el proyecto que estás por lanzar"
-          placeholder="// ej: vamos a lanzar una plataforma B2B que conecta proveedores y compradores industriales…"
+          aria-label={t(lang, "step1")}
+          placeholder={t(lang, "placeholder")}
         />
 
         <div className="presets">
-          <span className="presets-label">// ejemplos:</span>
+          <span className="presets-label">{t(lang, "examples")}</span>
           {PRESETS.map((p) => (
             <button
               key={p.label}
@@ -251,12 +262,12 @@ export default function Home() {
             aria-pressed={listening}
             title="Dictar la descripción por voz"
           >
-            {listening ? "● grabando… (tocar para parar)" : "🎤 dictar"}
+            {listening ? t(lang, "recording") : t(lang, "dictate")}
           </button>
         </div>
 
         <div className="presets">
-          <span className="presets-label">// profundidad:</span>
+          <span className="presets-label">{t(lang, "depthLabel")}</span>
           {DEPTHS.map((d) => (
             <button
               key={d.key}
@@ -266,7 +277,7 @@ export default function Home() {
               disabled={loading}
               title={d.hint}
             >
-              {d.label}
+              {t(lang, d.labelKey)}
             </button>
           ))}
         </div>
@@ -276,39 +287,79 @@ export default function Home() {
             {loading ? (
               <>
                 <span className="spinner" />
-                ejecutando…
+                {t(lang, "running")}
               </>
             ) : (
-              "[ ejecutar pre-mortem ]"
+              t(lang, "run")
             )}
           </button>
           {description && (
             <button onClick={() => setDescription("")} disabled={loading}>
-              [ limpiar ]
+              {t(lang, "clear")}
             </button>
           )}
           <span className="hint">⌘/Ctrl + Enter</span>
         </div>
         {error && <div className="error">{error}</div>}
 
-        <AISettings />
+        <EngineStatus lang={lang} />
       </section>
 
       <div ref={reportAnchor} />
+      {report && lang === "en" && (
+        <div className="statusline no-print">{t(lang, "reportLangNote")}</div>
+      )}
       {report && <Report report={report} />}
 
       <div className="footer">
-        <b>MICROSOFT AGENTS LEAGUE</b> · TRACK REASONING AGENTS · memoria vía Microsoft
-        IQ (Foundry IQ) — recuperador <b>{report?.retrieverUsed ?? "synthetic"}</b> · razonamiento{" "}
+        <b>MICROSOFT AGENTS LEAGUE</b> · TRACK REASONING AGENTS · {t(lang, "footerA")}{" "}
+        <b>{report?.retrieverUsed ?? "synthetic"}</b> · {t(lang, "footerB")}{" "}
         <b>{report?.generatedWith ?? "stub"}</b>
       </div>
     </div>
   );
 }
 
-function Hero() {
-  // Parallax sutil: el titular y el kicker se desplazan a velocidades distintas
-  // al hacer scroll, como capas de un expediente que se separan.
+/** Titular con entrada letra a letra (stagger) — cinemático, estilo «dossier». */
+function StaggerLine({
+  text,
+  className,
+  baseDelay,
+  reduce,
+}: {
+  text: string;
+  className?: string;
+  baseDelay: number;
+  reduce: boolean | null;
+}) {
+  if (reduce) {
+    return (
+      <span className={className} style={{ display: "block" }}>
+        {text}
+      </span>
+    );
+  }
+  return (
+    <span className={className} style={{ display: "block", whiteSpace: "pre-wrap" }} aria-label={text}>
+      {Array.from(text).map((ch, i) => (
+        <motion.span
+          key={i}
+          aria-hidden="true"
+          style={{ display: "inline-block" }}
+          initial={{ opacity: 0, y: "0.6em", rotateX: -55 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
+          transition={{ duration: 0.5, delay: baseDelay + i * 0.028, ease: EASE }}
+        >
+          {ch === " " ? " " : ch}
+        </motion.span>
+      ))}
+    </span>
+  );
+}
+
+function Hero({ lang }: { lang: Lang }) {
+  // Parallax: titular y kicker a velocidades distintas; spotlight que sigue el
+  // puntero; tarjeta-expediente con tilt 3D; ticker con los fracasos REALES.
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
@@ -317,6 +368,7 @@ function Hero() {
   });
   const yTitle = useTransform(scrollYProgress, [0, 1], [0, -64]);
   const yKicker = useTransform(scrollYProgress, [0, 1], [0, -26]);
+  const yCard = useTransform(scrollYProgress, [0, 1], [0, 40]);
   const fade = useTransform(scrollYProgress, [0, 0.9], [1, 0.25]);
 
   const enter = (delay: number) =>
@@ -328,30 +380,75 @@ function Hero() {
           transition: { duration: 0.65, delay, ease: EASE },
         };
 
+  // El expediente destacado del hero: Webvan, el fracaso real más icónico del archivo.
+  const featured = (failures as any[]).find((f) => f.company === "Webvan") ?? (failures as any[])[0];
+  const ticker = (failures as any[]).map((f) => ({ company: f.company, funding: f.funding }));
+
   return (
-    <section className="section hero3d" ref={ref}>
-      {/* piso en perspectiva: rejilla 3D que se aleja hacia el horizonte */}
+    <section
+      className="section hero3d"
+      ref={ref}
+      onPointerMove={(e) => {
+        const el = ref.current;
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--mx", `${(((e.clientX - r.left) / r.width) * 100).toFixed(2)}%`);
+        el.style.setProperty("--my", `${(((e.clientY - r.top) / r.height) * 100).toFixed(2)}%`);
+      }}
+    >
+      {/* piso en perspectiva + spotlight que sigue el puntero */}
       <div className="hero-floor" aria-hidden="true" />
-      <motion.div style={reduce ? undefined : { y: yKicker, opacity: fade }}>
-        <motion.div className="kicker" {...enter(0.05)}>
-          // memoria institucional · análisis de modos de fallo
+      <div className="hero-spot" aria-hidden="true" />
+
+      <div className="hero-grid">
+        <div>
+          <motion.div style={reduce ? undefined : { y: yKicker, opacity: fade }}>
+            <motion.div className="kicker" {...enter(0.05)}>
+              {t(lang, "kicker")}
+            </motion.div>
+          </motion.div>
+          <motion.div style={reduce ? undefined : { y: yTitle, opacity: fade }}>
+            <h1 className="manifesto">
+              <StaggerLine text={t(lang, "h1a")} baseDelay={0.15} reduce={reduce} />
+              <StaggerLine text={t(lang, "h1b")} className="dim" baseDelay={0.45} reduce={reduce} />
+            </h1>
+          </motion.div>
+          <motion.p className="lede prose" {...enter(0.75)}>
+            {t(lang, "lede")}
+            <b>{t(lang, "ledeBold")}</b>
+          </motion.p>
+        </div>
+
+        {/* expediente flotante con tilt 3D — evidencia REAL del archivo */}
+        <motion.div style={reduce ? undefined : { y: yCard }} {...enter(0.6)}>
+          <Tilt max={9} className="hero-card-tilt">
+            <Link href="/mundo" className="hero-card" aria-label={featured.company}>
+              <div className="hero-card-label">{t(lang, "heroCardLabel")}</div>
+              <div className="hero-card-co">☠ {featured.company}</div>
+              <div className="hero-card-years">{featured.years}</div>
+              <div className="hero-card-burn">
+                {t(lang, "burned")} <b>{featured.funding}</b>
+              </div>
+              <div className="hero-card-quote prose">“{featured.lesson}”</div>
+              <div className="hero-card-cta">{t(lang, "heroCardCta")}</div>
+            </Link>
+          </Tilt>
         </motion.div>
+      </div>
+
+      {/* ticker infinito: el archivo real desfila como cinta de evidencias */}
+      <motion.div className="marquee-wrap" {...enter(0.9)}>
+        <div className="readout">{t(lang, "ticker")}</div>
+        <div className="marquee" aria-hidden="true">
+          <div className="marquee-track">
+            {[...ticker, ...ticker].map((f, i) => (
+              <span className="marquee-item" key={i}>
+                ☠ {f.company} <b>{f.funding}</b>
+              </span>
+            ))}
+          </div>
+        </div>
       </motion.div>
-      <motion.div style={reduce ? undefined : { y: yTitle, opacity: fade }}>
-        <h1 className="manifesto">
-          <motion.span style={{ display: "block" }} {...enter(0.15)}>
-            No se predice.
-          </motion.span>
-          <motion.span className="dim" style={{ display: "block" }} {...enter(0.32)}>
-            Se recuerda.
-          </motion.span>
-        </h1>
-      </motion.div>
-      <motion.p className="lede prose" {...enter(0.5)}>
-        Describe el proyecto que estás por lanzar. El agente recupera de la memoria de la empresa
-        los proyectos pasados similares y deriva cómo podría fallar este —{" "}
-        <b>cada riesgo anclado a un caso real que puedes abrir y verificar.</b>
-      </motion.p>
     </section>
   );
 }

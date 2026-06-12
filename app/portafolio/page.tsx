@@ -8,7 +8,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { EASE, GrowBar } from "@/components/motion";
-import { llmHeaders } from "@/components/AISettings";
 
 interface RankRow {
   rank: number;
@@ -70,7 +69,7 @@ export default function PortafolioPage() {
     try {
       const res = await fetch("/api/premortem/batch", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...llmHeaders() },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projects, depth }),
       });
       const data = await res.json();

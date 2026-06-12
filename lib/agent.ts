@@ -26,7 +26,7 @@ import type {
   TraceStep,
   Verdict,
 } from "./types";
-import { getLLM, type LLMOverride } from "./llm";
+import { getLLM } from "./llm";
 import { getAllRecords, getRetriever } from "./retrieval";
 import { tokenize } from "./textsim";
 import { simulate } from "./simulation";
@@ -44,8 +44,6 @@ const MAX_RISKS = 6; // riesgos en el reporte final
 export interface PreMortemOptions {
   retrieveK?: number;
   maxRisks?: number;
-  /** BYOK por request (p.ej. OpenRouter desde el frontend). */
-  llm?: LLMOverride;
 }
 
 interface DedupeResult {
@@ -80,7 +78,7 @@ export async function generatePreMortem(
   const retrieveK = opts.retrieveK ?? RETRIEVE_K;
   const maxRisks = opts.maxRisks ?? MAX_RISKS;
 
-  const llm = getLLM(opts.llm);
+  const llm = getLLM();
   const retriever = getRetriever();
 
   // Traza auditable: cada paso queda registrado con lo que decidió y cuánto tardó.
