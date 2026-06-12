@@ -298,8 +298,8 @@ export default function Home() {
       {report && <Report report={report} />}
 
       <div className="footer">
-        <b>MICROSOFT AGENTS LEAGUE</b> · TRACK REASONING AGENTS · memoria vía interfaz tipo
-        Microsoft Work IQ — recuperador <b>{report?.retrieverUsed ?? "synthetic"}</b> · razonamiento{" "}
+        <b>MICROSOFT AGENTS LEAGUE</b> · TRACK REASONING AGENTS · memoria vía Microsoft
+        IQ (Foundry IQ) — recuperador <b>{report?.retrieverUsed ?? "synthetic"}</b> · razonamiento{" "}
         <b>{report?.generatedWith ?? "stub"}</b>
       </div>
     </div>

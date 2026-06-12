@@ -11,6 +11,7 @@
     "test": "node --import tsx --test \"tests/*.test.ts\"",
     "eval": "node scripts/eval.mjs",
     "seed:azure": "node scripts/seed-azure-search.mjs",
+    "seed:foundryiq": "node scripts/seed-foundry-iq.mjs",
     "video:preview": "cd video && npx -y hyperframes preview",
     "video:lint": "cd video && npx -y hyperframes lint",
     "video:render": "cd video && npx -y hyperframes render --output promo.mp4"

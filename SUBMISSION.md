@@ -27,6 +27,11 @@
 | Narrativa anclada | **"Muéstrame mi funeral"**: obituario del proyecto compuesto solo con los riesgos y la línea temporal |
 | Memoria que aprende | Feedback "✓ ocurrió / ✗ no ocurrió" por riesgo → precisión histórica del agente |
 
+## 🎥 Video demo
+
+> **▶️ TODO antes de entregar:** pega aquí el enlace al video (2-3 min) —
+> `🎥 Video: <URL de YouTube/Loom>`
+
 ## Demo (2 minutos)
 
 ```bash
@@ -37,20 +42,36 @@ npm install && npm run dev   # corre sin API keys (motor stub determinista)
 2. `// portafolio` → "cargar ejemplo" → 3 proyectos rankeados por riesgo en paralelo
 3. `npm test` (22 ✓) · `npm run eval` (8/8) — el razonamiento se mide
 
+## Microsoft IQ (requisito del hackathon): **Foundry**
+
+Los jueces confirmaron que el mínimo es *"at least one Microsoft Foundry hosted
+model"* con backend en vivo. Dos niveles, ambos implementados:
+
+- **Modelo de Foundry (GRATIS, sin Azure):** `LLM_PROVIDER=foundry` → el agente
+  razona con **Foundry Local** (modelos de Microsoft Foundry en la máquina). El
+  reporte muestra `razonamiento: foundry` como prueba en vivo. Guía:
+  `SETUP-FOUNDRY-IQ.md`.
+- **Foundry IQ retrieval (upgrade, con Azure):** `RETRIEVER=foundryiq` → cada
+  pre-mortem llama al *agentic retrieval* de una knowledge base de Foundry IQ
+  (`POST /knowledgebases/{kb}/retrieve`), mapeando `references[].sourceData` →
+  `RetrievalHit`. Provisión: `npm run seed:foundryiq`.
+
 ## Arquitectura en una línea
 
-Next.js 14 full-stack · retrieval TF-IDF propio sobre 30 casos (interfaz espejo
-del **Copilot Retrieval API** → swap directo a **Foundry IQ / Azure AI Search**,
-ya implementado, o Work IQ) · LLM conmutable (stub/OpenAI/Azure/GitHub
-Models/Ollama/Anthropic) · memoria viva con persistencia · auth + rate limit +
-health + métricas Prometheus · Docker + CI.
+Next.js 14 full-stack · **Foundry IQ** (agentic retrieval) como memoria real,
+con interfaz `MemoryRetriever` única (espejo del Copilot Retrieval API; fallbacks:
+Azure AI Search, synthetic local, Work IQ stub) · LLM conmutable (stub/Azure
+OpenAI/OpenAI/GitHub Models/Ollama/Anthropic) · memoria viva con persistencia ·
+auth + rate limit + health + métricas Prometheus · Docker + CI.
 
-## Qué es real y qué es sintético (honestidad)
+## Qué es real y qué es de ejemplo (honestidad)
 
-- ✅ Real: todo el razonamiento, retrieval, eval, persistencia, MCP, APIs.
-- 🧪 Sintético: los 30 casos de memoria (Work IQ exige licencia Copilot y su
-  REST API es GA el 16-jun — después del cierre). El `AzureSearchRetriever`
-  (Foundry IQ) está implementado para datos reales: `npm run seed:azure`.
+- ✅ Real: todo el razonamiento, retrieval, eval, persistencia, MCP, APIs, y la
+  **integración con Foundry IQ** (`RETRIEVER=foundryiq`). Con `LLM_PROVIDER=azure`
+  o `github`, el razonamiento también usa un LLM real.
+- 🧪 De ejemplo: los 30 casos de memoria son un corpus semilla (no confidencial);
+  `npm run seed:foundryiq` los carga en Foundry IQ real.
+- ✅ Datos públicos verificables: 32 fracasos de empresas reales con fuente citada.
 
 ## Extras
 
@@ -65,3 +86,18 @@ health + métricas Prometheus · Docker + CI.
 - Video promo (HyperFrames, `video/`): `npm run video:preview`; el MP4 se
   renderiza con el workflow `render-video` de GitHub Actions.
 - PWA instalable · dictado por voz · diseño "Terminal Forense" auditado WCAG AA.
+
+## ✅ Checklist de reglas (Agents League)
+
+| Requisito | Estado |
+|---|---|
+| Track elegido (Reasoning Agents) | ✅ |
+| **Integra Microsoft Foundry** (modelo hosted) | ✅ `LLM_PROVIDER=foundry` (Foundry Local, gratis) · upgrade: `RETRIEVER=foundryiq` |
+| Repositorio **público** | ⬜ **hazlo público antes de entregar** (GitHub → Settings → Visibility) |
+| README presente | ✅ |
+| 🎥 Video demo (2-3 min) | ⬜ **graba y pega el enlace arriba** |
+| Sin información confidencial (Disclaimer) | ✅ sin secretos; solo placeholders; `.env*` en `.gitignore` |
+| Código de conducta respetado | ✅ |
+| Funcional y demoable | ✅ corre out-of-the-box (`npm run dev`) |
+
+> Los dos ⬜ son acciones manuales tuyas en la plataforma/GitHub; el resto está en el repo.

@@ -156,19 +156,20 @@ export class WorkIQRetriever implements MemoryRetriever {
 }
 
 /**
- * Adaptador REAL a Azure AI Search — el motor de recuperación sobre el que corre
- * Azure AI Foundry IQ. Es la ruta de datos reales FACTIBLE para el track Reasoning
- * Agents (free tier + $200 de crédito Azure, SIN licencia Copilot).
+ * Adaptador REAL a Azure AI Search "clásico" (`/indexes/.../docs/search`) — el motor
+ * de indexación sobre el que corre Foundry IQ, expuesto directo. Es el camino REAL
+ * más simple y robusto (solo necesita un servicio de Azure AI Search, sin Azure OpenAI):
+ * útil como fallback garantizado del FoundryIQRetriever de abajo.
  *
  * Siembra la memoria con:  npm run seed:azure  (ver scripts/seed-azure-search.mjs).
- * Luego: RETRIEVER=foundryiq  +  AZURE_SEARCH_ENDPOINT / AZURE_SEARCH_API_KEY / AZURE_SEARCH_INDEX.
+ * Luego: RETRIEVER=azuresearch  +  AZURE_SEARCH_ENDPOINT / AZURE_SEARCH_API_KEY / AZURE_SEARCH_INDEX.
  *
  * Consulta full-text el índice, reconstruye el registro, y MEZCLA el score de Azure
  * con el solapamiento de las 4 dimensiones (igual que el SyntheticRetriever), de modo
  * que el resto del agente y la UI no cambian. webUrl sigue apuntando a /case/{id}.
  */
 export class AzureSearchRetriever implements MemoryRetriever {
-  readonly name = "foundryiq";
+  readonly name = "azuresearch";
 
   async retrieve(profile: ProjectProfile, k: number): Promise<RetrievalHit[]> {
     const endpoint = (process.env.AZURE_SEARCH_ENDPOINT ?? "").replace(/\/$/, "");
@@ -230,6 +231,140 @@ export class AzureSearchRetriever implements MemoryRetriever {
   }
 }
 
+/**
+ * Adaptador REAL a **Microsoft Foundry IQ** (agentic retrieval) — la integración
+ * de IQ que exige el hackathon. NO es la búsqueda clásica: llama al endpoint de
+ * recuperación agéntica de una *knowledge base* de Foundry IQ, que planea la
+ * consulta con un modelo, busca en sus *knowledge sources* y devuelve grounding
+ * extractivo con citas. Contrato verificado (jun 2026):
+ *
+ *   POST https://<servicio>.search.windows.net/knowledgebases/<kb>/retrieve
+ *        ?api-version=2026-05-01-preview            ← preview (síntesis/planeo)
+ *        ?api-version=2026-04-01                      ← GA (extractivo mínimo)
+ *   Authorization: Bearer <token search.azure.com>   ← o  api-key: <admin key>
+ *   {
+ *     "messages": [{ "role":"user", "content":[{ "type":"text", "text":"<query>" }]}],
+ *     "knowledgeSourceParams": [{
+ *        "knowledgeSourceName": "<ks>", "kind": "searchIndex",
+ *        "includeReferences": true, "includeReferenceSourceData": true,
+ *        "maxOutputDocuments": k
+ *     }],
+ *     "outputMode": "extractedData"
+ *   }
+ *
+ * Respuesta: { response[].content[].text (grounding JSON con ref_id/title/content),
+ *              references[] { id, docKey, sourceData{...campos del índice...},
+ *              sensitivityLabelInfo }, activity[] }. Mapeamos references[].sourceData
+ * 1:1 a PastProjectRecord, así el resto del agente y la UI NO cambian.
+ *
+ * Provisión (una vez):  npm run seed:foundryiq  (crea índice + knowledge source +
+ * knowledge base con tu modelo de Azure OpenAI). Luego RETRIEVER=foundryiq.
+ */
+export class FoundryIQRetriever implements MemoryRetriever {
+  readonly name = "foundryiq";
+
+  async retrieve(profile: ProjectProfile, k: number): Promise<RetrievalHit[]> {
+    const endpoint = (process.env.AZURE_SEARCH_ENDPOINT ?? "").replace(/\/$/, "");
+    const kb = process.env.FOUNDRY_KB_NAME ?? "company-memory-kb";
+    const ks = process.env.FOUNDRY_KS_NAME ?? "company-memory-ks";
+    const apiKey = process.env.AZURE_SEARCH_API_KEY ?? "";
+    const bearer = process.env.FOUNDRY_BEARER_TOKEN ?? "";
+    const apiVersion = process.env.FOUNDRY_API_VERSION ?? "2026-05-01-preview";
+
+    const queryText = [
+      profile.raw,
+      profile.keywords.join(" "),
+      profile.tech.join(" "),
+      profile.marketBet.join(" "),
+      profile.teamDynamics.join(" "),
+    ].join(" . ").slice(0, 1500);
+
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (bearer) headers["Authorization"] = `Bearer ${bearer}`;
+    else headers["api-key"] = apiKey;
+
+    const knowledgeSourceParams = [
+      {
+        knowledgeSourceName: ks,
+        kind: "searchIndex",
+        includeReferences: true,
+        includeReferenceSourceData: true,
+        maxOutputDocuments: Math.max(k, 10),
+      },
+    ];
+    // La GA (2026-04-01) usa `intents` y es extractiva mínima; la preview usa
+    // `messages` + outputMode. Enviamos el cuerpo correcto según la api-version.
+    const isPreview = apiVersion.includes("preview");
+    const body = isPreview
+      ? {
+          messages: [{ role: "user", content: [{ type: "text", text: queryText }] }],
+          knowledgeSourceParams,
+          outputMode: "extractedData",
+          includeActivity: false,
+        }
+      : {
+          intents: [{ type: "semantic", search: queryText }],
+          knowledgeSourceParams,
+        };
+
+    const res = await fetch(
+      `${endpoint}/knowledgebases/${kb}/retrieve?api-version=${apiVersion}`,
+      { method: "POST", headers, body: JSON.stringify(body) }
+    );
+    if (!res.ok && res.status !== 206) {
+      throw new Error(`Foundry IQ retrieve HTTP ${res.status}: ${await res.text()}`);
+    }
+    const data = await res.json();
+
+    // Texto de grounding: response[].content[].text es un JSON array de {ref_id,title,content}.
+    const groundingById = new Map<string, string>();
+    for (const msg of data.response ?? []) {
+      for (const part of msg.content ?? []) {
+        if (part.type !== "text" || typeof part.text !== "string") continue;
+        try {
+          for (const g of JSON.parse(part.text)) {
+            if (g && g.ref_id != null) groundingById.set(String(g.ref_id), String(g.content ?? ""));
+          }
+        } catch {
+          /* el grounding puede venir como prosa; lo ignoramos y usamos sourceData */
+        }
+      }
+    }
+
+    const refs: any[] = (data.references ?? []).filter((r: any) => r && r.sourceData);
+    const n = Math.max(1, refs.length);
+
+    const scored = refs.map((ref, i) => {
+      const r = toRecord(ref.sourceData);
+      // Foundry IQ devuelve las referencias ya rankeadas; usamos la posición como
+      // proxy de relevancia (1.0 la primera) y la mezclamos con las dimensiones.
+      const textScore = (n - i) / n;
+      const dim = dimensionMatch(profile, r);
+      const combined = 0.55 * textScore + 0.45 * dim.score;
+      const grounding = groundingById.get(String(ref.id)) || r.whatWentWrong;
+      const sens =
+        ref.sensitivityLabelInfo?.labelName ?? (r as any).sensitivityLabel ?? null;
+      return { r, textScore, dim, combined, grounding, sens };
+    });
+    scored.sort((a, b) => b.combined - a.combined);
+
+    return scored.slice(0, k).map(({ r, textScore, dim, combined, grounding, sens }) => ({
+      recordId: r.id,
+      webUrl: `/case/${r.id}`,
+      title: r.name,
+      extracts: [
+        { text: grounding, relevanceScore: Number(textScore.toFixed(4)) },
+        { text: `Apuesta: ${r.assumption}`, relevanceScore: Number(textScore.toFixed(4)) },
+      ],
+      resourceType: "listItem",
+      sensitivityLabel: sens,
+      score: Number(combined.toFixed(4)),
+      matchedDimensions: dim.labels,
+      record: r,
+    }));
+  }
+}
+
 /** Reconstruye un PastProjectRecord desde un documento de Azure AI Search. */
 function toRecord(d: any): PastProjectRecord {
   return {
@@ -275,7 +410,15 @@ export function getRetriever(): MemoryRetriever {
     if (hasCreds) return new WorkIQRetriever();
     console.warn("[retriever] Credenciales de Work IQ ausentes — uso synthetic.");
   }
-  if (which === "foundryiq" || which === "azuresearch") {
+  if (which === "foundryiq") {
+    const hasAuth =
+      process.env.AZURE_SEARCH_API_KEY || process.env.FOUNDRY_BEARER_TOKEN;
+    if (process.env.AZURE_SEARCH_ENDPOINT && hasAuth) return new FoundryIQRetriever();
+    console.warn(
+      "[retriever] Config de Foundry IQ ausente (AZURE_SEARCH_ENDPOINT + AZURE_SEARCH_API_KEY/FOUNDRY_BEARER_TOKEN). Corre `npm run seed:foundryiq` primero — uso synthetic."
+    );
+  }
+  if (which === "azuresearch") {
     if (process.env.AZURE_SEARCH_ENDPOINT && process.env.AZURE_SEARCH_API_KEY)
       return new AzureSearchRetriever();
     console.warn("[retriever] Config de Azure AI Search ausente — uso synthetic.");

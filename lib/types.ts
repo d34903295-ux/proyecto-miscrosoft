@@ -321,7 +321,7 @@ export interface PreMortemReport {
   funeral: string;
   /** Proveedor de razonamiento usado (stub | openai | azure | anthropic). */
   generatedWith: string;
-  /** Recuperador de memoria usado (synthetic | workiq). */
+  /** Recuperador de memoria usado (synthetic | foundryiq | azuresearch | workiq). */
   retrieverUsed: string;
   /** Cuántos casos pasados se inspeccionaron. */
   casesInspected: number;
