@@ -136,16 +136,23 @@ a:hover {
   white-space: nowrap;
 }
 
-/* móvil: la barra superior pasa a varias líneas sin desbordar */
+/* móvil: la barra superior pasa a varias líneas sin desbordar.
+   Deja de ser sticky: con nav + idioma + reloj ocuparía media pantalla fija
+   y el contenido se cortaría feo debajo. En móvil se desplaza con el scroll. */
 @media (max-width: 640px) {
   .sysbar {
+    position: static;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px 10px;
     padding: 9px 14px;
   }
   .sysbar .sys-right {
-    gap: 10px;
-    font-size: 11px;
+    gap: 6px 12px;
+    font-size: 10.5px;
+  }
+  .lang-toggle {
+    padding: 1px 6px;
+    font-size: 10.5px;
   }
   .clock {
     width: 100%;
@@ -155,12 +162,21 @@ a:hover {
   .statusline {
     padding: 8px 14px;
   }
+  .section {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
   .controls {
     flex-wrap: wrap;
   }
   .controls .primary {
     flex: 1 1 100%;
     justify-content: center;
+  }
+  /* las etiquetas largas (casos, condiciones) envuelven en vez de desbordar */
+  .tag {
+    white-space: normal;
+    line-height: 1.45;
   }
 }
 
