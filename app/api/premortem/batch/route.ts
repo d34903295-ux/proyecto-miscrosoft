@@ -4,7 +4,6 @@
 
 import { NextResponse } from "next/server";
 import { analyzeProject, parseDepth } from "@/lib/analyze";
-import { llmFromHeaders } from "@/lib/byok";
 import { guard } from "@/lib/guard";
 import { inc, log, observe } from "@/lib/logger";
 
@@ -46,10 +45,9 @@ export async function POST(req: Request) {
     }
 
     const origin = new URL(req.url).origin;
-    const llm = llmFromHeaders(req);
     const results = await Promise.all(
       projects.map(async (p) => {
-        const { report, cached } = await analyzeProject(p.description, depth, save, origin, llm);
+        const { report, cached } = await analyzeProject(p.description, depth, save, origin);
         return { name: p.name, report, cached };
       })
     );

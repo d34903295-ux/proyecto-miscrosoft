@@ -78,9 +78,11 @@ auth + rate limit + health + métricas Prometheus · Docker + CI.
 - **Mundo 3D** (`/mundo`): globo terráqueo WebGL (Three.js) con las sedes
   REALES de las 32 empresas de la memoria externa — toca una luz ámbar y abre
   el expediente. Construido con los assets 3D del proyecto.
-- **BYOK OpenRouter**: panel "configurar IA" en el frontend — el usuario pega
-  su key (modo automático: OpenRouter elige el mejor modelo); la key vive solo
-  en su navegador y viaja por header.
+- **Panel de estado del motor en vivo**: la UI muestra el modelo de Foundry en
+  uso (GitHub Models), si la última llamada respondió y la cuota restante que
+  reporta el gateway — observabilidad real, sin keys del usuario.
+- **UI bilingüe (ES/EN)** con reloj local del visitante (zona horaria real del
+  dispositivo).
 - Portafolio modo VC (orden de inversión) · timeline de la catástrofe ·
   webhook a Teams/Slack con la decisión del consejo.
 - Video promo (HyperFrames, `video/`): `npm run video:preview`; el MP4 se

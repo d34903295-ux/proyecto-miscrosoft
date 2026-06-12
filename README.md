@@ -283,10 +283,14 @@ curl -s -X POST http://localhost:3000/api/mcp \
 - **Next.js 14 (App Router) + TypeScript** — un solo app full-stack (UI + API + MCP).
 - **Recuperación TF-IDF/coseno en TS puro** → corre en un laptop, sin descargas
   de modelos ni vector DB.
-- **LLM conmutable por env**: `stub` (determinista, sin API key, default),
-  `openai` / `azure` / `anthropic`, **`github`** (GitHub Models — inferencia
-  **gratis** con un token de GitHub: LLM real para la demo sin tarjeta) y
-  **`ollama`** (LLM local, razonamiento 100% offline). El demo corre out-of-the-box.
+- **LLM conmutable por env**: **`github`** (GitHub Models — catálogo de
+  **Microsoft Foundry**, inferencia gratis con un token de GitHub),
+  **`foundry`** (Foundry Local, modelo de Foundry on-device), `azure` /
+  `openai` / `anthropic`, `ollama` (offline) y `stub` (determinista, default).
+  La UI muestra el **estado real del motor** (modelo, activo, cuota restante)
+  en `/api/llm-status`. El demo corre out-of-the-box.
+- **UI bilingüe (ES/EN)** + reloj con la zona horaria real del visitante. El
+  contenido del informe se genera en español (idioma del archivo institucional).
 - **Movimiento**: `framer-motion` (reveals por scroll, parallax del hero,
   contadores, gráficos que se trazan solos) + `lenis` (scroll inercial suave).
   Todo respeta `prefers-reduced-motion`.
