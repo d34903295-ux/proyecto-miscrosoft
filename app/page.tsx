@@ -10,6 +10,7 @@ import EngineStatus from "@/components/EngineStatus";
 import Clock from "@/components/Clock";
 import ScrollProgress from "@/components/ScrollProgress";
 import Tilt from "@/components/Tilt";
+import Magnetic from "@/components/Magnetic";
 import { t, useLang, type Lang } from "@/lib/i18n";
 import failures from "@/lib/memory/external_failures.json";
 
@@ -283,16 +284,18 @@ export default function Home() {
         </div>
 
         <div className="controls">
-          <button className="primary" onClick={generate} disabled={loading || description.trim().length < 20}>
-            {loading ? (
-              <>
-                <span className="spinner" />
-                {t(lang, "running")}
-              </>
-            ) : (
-              t(lang, "run")
-            )}
-          </button>
+          <Magnetic strength={0.3}>
+            <button className="primary" onClick={generate} disabled={loading || description.trim().length < 20}>
+              {loading ? (
+                <>
+                  <span className="spinner" />
+                  {t(lang, "running")}
+                </>
+              ) : (
+                t(lang, "run")
+              )}
+            </button>
+          </Magnetic>
           {description && (
             <button onClick={() => setDescription("")} disabled={loading}>
               {t(lang, "clear")}

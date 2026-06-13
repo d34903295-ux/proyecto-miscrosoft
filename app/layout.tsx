@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SmoothScroll } from "@/components/motion";
+import Atmosphere from "@/components/Atmosphere";
+import CommandPalette from "@/components/CommandPalette";
 
 export const metadata: Metadata = {
   title: "PRE-MORTEM / INSTITUCIONAL",
@@ -39,7 +41,9 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <Atmosphere />
         <SmoothScroll>{children}</SmoothScroll>
+        <CommandPalette />
       </body>
     </html>
   );
