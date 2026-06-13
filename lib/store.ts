@@ -26,7 +26,16 @@ function assertSafeId(id: string): void {
 }
 
 export class FileStore implements DocumentStore {
+  // Capa en memoria (por instancia): hace fiables los permalinks recién creados
+  // aunque el FS sea efímero/de solo lectura (serverless). El archivo es la
+  // durabilidad best-effort; la memoria es la fuente rápida dentro de la instancia.
+  private mem = new Map<string, unknown>();
+
   constructor(private baseDir: string) {}
+
+  private key(collection: string, id: string): string {
+    return `${collection}/${id}`;
+  }
 
   private dir(collection: string): string {
     assertSafeId(collection);
@@ -37,45 +46,65 @@ export class FileStore implements DocumentStore {
 
   put(collection: string, id: string, doc: unknown): void {
     assertSafeId(id);
-    const dir = this.dir(collection);
-    const tmp = join(dir, `.${id}.tmp`);
-    writeFileSync(tmp, JSON.stringify(doc), "utf8");
-    renameSync(tmp, join(dir, `${id}.json`)); // atómico en el mismo filesystem
+    this.mem.set(this.key(collection, id), doc);
+    try {
+      const dir = this.dir(collection);
+      const tmp = join(dir, `.${id}.tmp`);
+      writeFileSync(tmp, JSON.stringify(doc), "utf8");
+      renameSync(tmp, join(dir, `${id}.json`)); // atómico en el mismo filesystem
+    } catch {
+      // FS de solo lectura: la copia en memoria sigue sirviendo en esta instancia
+    }
   }
 
   get<T>(collection: string, id: string): T | null {
     assertSafeId(id);
+    const cached = this.mem.get(this.key(collection, id));
+    if (cached !== undefined) return cached as T;
     try {
-      return JSON.parse(readFileSync(join(this.dir(collection), `${id}.json`), "utf8")) as T;
+      const doc = JSON.parse(
+        readFileSync(join(this.dir(collection), `${id}.json`), "utf8")
+      ) as T;
+      this.mem.set(this.key(collection, id), doc);
+      return doc;
     } catch {
       return null;
     }
   }
 
   list<T>(collection: string, limit = 100): { id: string; doc: T }[] {
-    const dir = this.dir(collection);
-    const files = readdirSync(dir, { withFileTypes: true })
-      .filter((f) => f.isFile() && f.name.endsWith(".json"))
-      .map((f) => f.name)
-      .sort()
-      .reverse() // los ids llevan timestamp como prefijo → orden cronológico inverso
-      .slice(0, limit);
-    const out: { id: string; doc: T }[] = [];
-    for (const name of files) {
-      const id = name.slice(0, -5);
-      const doc = this.get<T>(collection, id);
-      if (doc !== null) out.push({ id, doc });
+    const byId = new Map<string, T>();
+    // archivo (durabilidad)
+    try {
+      const dir = this.dir(collection);
+      for (const f of readdirSync(dir, { withFileTypes: true })) {
+        if (!f.isFile() || !f.name.endsWith(".json")) continue;
+        const id = f.name.slice(0, -5);
+        const doc = this.get<T>(collection, id);
+        if (doc !== null) byId.set(id, doc);
+      }
+    } catch {
+      // sin FS: usamos solo memoria
     }
-    return out;
+    // memoria (recién creados / FS no escribible) — pisa al archivo
+    const prefix = `${collection}/`;
+    for (const [k, v] of this.mem) {
+      if (k.startsWith(prefix)) byId.set(k.slice(prefix.length), v as T);
+    }
+    return [...byId.entries()]
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1)) // ids con timestamp → recientes primero
+      .slice(0, limit)
+      .map(([id, doc]) => ({ id, doc }));
   }
 
   delete(collection: string, id: string): boolean {
     assertSafeId(id);
+    const had = this.mem.delete(this.key(collection, id));
     try {
       rmSync(join(this.dir(collection), `${id}.json`));
       return true;
     } catch {
-      return false;
+      return had;
     }
   }
 }
