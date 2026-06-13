@@ -54,7 +54,7 @@ function parseProjects(text: string): { name?: string; description: string }[] {
 
 export default function PortafolioPage() {
   const [text, setText] = useState("");
-  const [depth, setDepth] = useState<string>("estandar");
+  const [depth, setDepth] = useState<string>("rapido");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ranking, setRanking] = useState<RankRow[] | null>(null);
