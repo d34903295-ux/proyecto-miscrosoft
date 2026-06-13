@@ -52,7 +52,9 @@ const DEPTHS = [
 export default function Home() {
   const [lang, setLang] = useLang();
   const [description, setDescription] = useState("");
-  const [depth, setDepth] = useState<string>("estandar");
+  // 'rápido' por defecto: ~5 llamadas al modelo → nunca toca el rate limit del
+  // tier gratis. El usuario puede subir a estándar/profundo a mano.
+  const [depth, setDepth] = useState<string>("rapido");
   const [report, setReport] = useState<PreMortemReport | null>(null);
   const [cached, setCached] = useState(false);
   const [loading, setLoading] = useState(false);

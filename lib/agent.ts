@@ -71,6 +71,25 @@ function dedupeByCategory(hits: RetrievalHit[]): DedupeResult {
   return { kept, droppedByDedupe };
 }
 
+/** map con concurrencia limitada (preserva el orden). Evita ráfagas que el free
+ *  tier de un LLM real penaliza con 429. */
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  const workers = Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i], i);
+    }
+  });
+  await Promise.all(workers);
+  return out;
+}
+
 export async function generatePreMortem(
   description: string,
   opts: PreMortemOptions = {}
@@ -139,9 +158,13 @@ export async function generatePreMortem(
     return out;
   };
 
-  // 4 + 5) Derivar el riesgo y refutarlo (anti-confirmación), en paralelo.
-  const derived = await Promise.all(
-    candidates.map(async (hit): Promise<DerivedRisk> => {
+  // 4 + 5) Derivar el riesgo y refutarlo (anti-confirmación).
+  // Concurrencia LIMITADA (no ráfaga): con LLMs reales en free tier, lanzar N
+  // llamadas a la vez dispara 429 por cuota. Procesamos de a 2.
+  const derived = await mapLimit(
+    candidates,
+    2,
+    async (hit): Promise<DerivedRisk> => {
       const core = await llm.deriveRisk({ profile, hit });
       const refutation = await llm.refuteRisk({ profile, hit, risk: core });
       const r = hit.record;
@@ -172,7 +195,7 @@ export async function generatePreMortem(
           matchedTerms: matchedTermsFor(extract),
         },
       };
-    })
+    }
   );
 
   const moved = derived.filter(

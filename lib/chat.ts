@@ -139,7 +139,7 @@ export async function answerFromCase(r: PastProjectRecord, question: string): Pr
   const target = openAICompatTarget();
   if (target) {
     try {
-      const res = await fetch(target.url, {
+      const init = {
         method: "POST",
         headers: target.headers,
         body: JSON.stringify({
@@ -151,7 +151,14 @@ export async function answerFromCase(r: PastProjectRecord, question: string): Pr
           temperature: 0.1,
           max_tokens: 300,
         }),
-      });
+      };
+      let res = await fetch(target.url, init);
+      for (let attempt = 0; res.status === 429 && attempt < 2; attempt++) {
+        const ra = Number(res.headers.get("retry-after"));
+        const waitMs = Math.min((Number.isFinite(ra) && ra > 0 ? ra : 1.5 * 2 ** attempt) * 1000, 8000);
+        await new Promise((r) => setTimeout(r, waitMs));
+        res = await fetch(target.url, init);
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
       const data = await res.json();
       const text = String(data.choices?.[0]?.message?.content ?? "").trim();

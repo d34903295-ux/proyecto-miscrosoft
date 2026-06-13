@@ -329,12 +329,26 @@ class OpenAIReasoningLLM extends ChatReasoningLLM {
     };
     if (supportsJsonMode) body.response_format = { type: "json_object" };
 
-    let res: Response;
-    try {
-      res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
-    } catch (e: any) {
-      recordLLMCall(this.name, model, null, false, e?.message);
-      throw e;
+    // Reintenta ante 429 (cuota del free tier) respetando Retry-After, con tope
+    // de espera para no colgar la request. Hasta 3 intentos.
+    let res: Response | undefined;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
+      } catch (e: any) {
+        recordLLMCall(this.name, model, null, false, e?.message);
+        throw e;
+      }
+      if (res.status === 429 && attempt < 2) {
+        const ra = Number(res.headers.get("retry-after"));
+        const waitMs = Math.min(
+          (Number.isFinite(ra) && ra > 0 ? ra : 1.5 * 2 ** attempt) * 1000,
+          8000
+        );
+        await new Promise((r) => setTimeout(r, waitMs));
+        continue;
+      }
+      break;
     }
     if (!res.ok) {
       const text = await res.text();

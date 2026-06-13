@@ -33,7 +33,7 @@ async function translateBatch(strings: string[], target = "en"): Promise<string[
     JSON.stringify(payload);
 
   try {
-    const res = await fetch(t.url, {
+    const init = {
       method: "POST",
       headers: t.headers,
       body: JSON.stringify({
@@ -45,7 +45,14 @@ async function translateBatch(strings: string[], target = "en"): Promise<string[
         temperature: 0,
         response_format: { type: "json_object" },
       }),
-    });
+    };
+    let res = await fetch(t.url, init);
+    for (let attempt = 0; res.status === 429 && attempt < 2; attempt++) {
+      const ra = Number(res.headers.get("retry-after"));
+      const waitMs = Math.min((Number.isFinite(ra) && ra > 0 ? ra : 1.5 * 2 ** attempt) * 1000, 8000);
+      await new Promise((r) => setTimeout(r, waitMs));
+      res = await fetch(t.url, init);
+    }
     if (!res.ok) {
       recordLLMCall(t.provider, t.model, res.headers, false, `translate HTTP ${res.status}`);
       return null;
