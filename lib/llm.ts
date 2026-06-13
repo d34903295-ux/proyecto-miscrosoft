@@ -329,26 +329,37 @@ class OpenAIReasoningLLM extends ChatReasoningLLM {
     };
     if (supportsJsonMode) body.response_format = { type: "json_object" };
 
-    // Reintenta ante 429 (cuota del free tier) respetando Retry-After, con tope
-    // de espera para no colgar la request. Hasta 3 intentos.
-    let res: Response | undefined;
-    for (let attempt = 0; ; attempt++) {
-      try {
-        res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
-      } catch (e: any) {
-        recordLLMCall(this.name, model, null, false, e?.message);
-        throw e;
+    // Reintenta ante 429 (cuota del free tier) respetando Retry-After. Si el
+    // modelo principal sigue sin cuota, cae a un modelo de RESPALDO (otro tier,
+    // cuota aparte) — así el demo se auto-cura cuando se agota gpt-4o-mini.
+    const fallbackModel =
+      this.mode === "github" ? process.env.GITHUB_MODEL_FALLBACK ?? "openai/gpt-4o" : null;
+
+    const attempt = async (useModel: string): Promise<Response> => {
+      body.model = useModel;
+      let r = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
+      for (let a = 0; r.status === 429 && a < 2; a++) {
+        const ra = Number(r.headers.get("retry-after"));
+        const waitMs = Math.min((Number.isFinite(ra) && ra > 0 ? ra : 1.5 * 2 ** a) * 1000, 8000);
+        await new Promise((res) => setTimeout(res, waitMs));
+        r = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
       }
-      if (res.status === 429 && attempt < 2) {
-        const ra = Number(res.headers.get("retry-after"));
-        const waitMs = Math.min(
-          (Number.isFinite(ra) && ra > 0 ? ra : 1.5 * 2 ** attempt) * 1000,
-          8000
-        );
-        await new Promise((r) => setTimeout(r, waitMs));
-        continue;
+      return r;
+    };
+
+    let res: Response;
+    try {
+      res = await attempt(model);
+      if (res.status === 429 && fallbackModel && fallbackModel !== model) {
+        const alt = await attempt(fallbackModel);
+        if (alt.ok || alt.status !== 429) {
+          model = fallbackModel; // el reporte mostrará el modelo que sí respondió
+          res = alt;
+        }
       }
-      break;
+    } catch (e: any) {
+      recordLLMCall(this.name, model, null, false, e?.message);
+      throw e;
     }
     if (!res.ok) {
       const text = await res.text();
