@@ -1,6 +1,8 @@
 # 🪦 Pre-Mortem Institucional — Submission
 
-**Microsoft Agents League · Track: Reasoning Agents · v1.1.0**
+**Microsoft Agents League · Track: Reasoning Agents · v1.2.0**
+
+> 📖 **Explicación completa para jueces: [`COMO-FUNCIONA.md`](./COMO-FUNCIONA.md)**
 
 > **EN —** A reasoning agent that doesn't predict: it *remembers*. Before you
 > launch a project, it searches your company's institutional memory for similar

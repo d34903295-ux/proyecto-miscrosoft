@@ -8,6 +8,8 @@
 
 Hecho para **Microsoft Agents League** · Track **Reasoning Agents**.
 
+> 📖 ¿Cómo funciona, paso a paso? → **[`COMO-FUNCIONA.md`](./COMO-FUNCIONA.md)** (explicación para jueces).
+
 > **TL;DR (English):** Before launching a project, this reasoning agent searches
 > your company's institutional memory for similar past projects, extracts what
 > went wrong, and produces a pre-mortem report — every risk anchored to a real,
@@ -281,8 +283,9 @@ curl -s -X POST http://localhost:3000/api/mcp \
 ## Stack
 
 - **Next.js 14 (App Router) + TypeScript** — un solo app full-stack (UI + API + MCP).
-- **Recuperación TF-IDF/coseno en TS puro** → corre en un laptop, sin descargas
-  de modelos ni vector DB.
+- **Recuperación híbrida**: similitud **semántica densa** (embeddings reales de un
+  modelo de Foundry, `RETRIEVER=embeddings`) **+ solapamiento de 4 dimensiones de
+  negocio**. Cae a **TF-IDF** determinista si no hay red — el demo nunca se rompe.
 - **LLM conmutable por env**: **`github`** (GitHub Models — catálogo de
   **Microsoft Foundry**, inferencia gratis con un token de GitHub),
   **`foundry`** (Foundry Local, modelo de Foundry on-device), `azure` /

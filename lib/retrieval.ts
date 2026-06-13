@@ -18,6 +18,7 @@
 import type { PastProjectRecord, ProjectProfile, RetrievalHit } from "./types";
 import { buildVectorizer, vectorizeQuery, cosine } from "./textsim";
 import { allRecords, memoryVersion, recordById } from "./memorystore";
+import { embedBatch, denseCosine, embeddingsAvailable } from "./embeddings";
 
 export interface MemoryRetriever {
   readonly name: string;
@@ -114,6 +115,78 @@ export class SyntheticRetriever implements MemoryRetriever {
       matchedDimensions: dim.labels,
       record: r,
     }));
+  }
+}
+
+// Embeddings de los registros, cacheados por versión de memoria (se recomputan
+// solo si se agrega/borra un caso). Una sola llamada batch al modelo de Foundry.
+let recordEmbeds: number[][] | null = null;
+let recordEmbedsVersion = -1;
+let recordEmbedIds: string[] = [];
+
+/**
+ * Recuperación SEMÁNTICA densa con embeddings REALES de un modelo de Microsoft
+ * Foundry (GitHub Models por defecto; Azure OpenAI si está configurado). Mezcla
+ * la similitud semántica densa (significado, no palabras) con el solapamiento de
+ * las 4 dimensiones de negocio — misma fórmula y mismo contrato que el resto, así
+ * que la UI no cambia. Si los embeddings fallan, cae al TF-IDF determinista: el
+ * demo nunca se rompe.
+ */
+export class EmbeddingRetriever implements MemoryRetriever {
+  readonly name = "embeddings";
+
+  private async ensureRecordEmbeds(records: PastProjectRecord[]): Promise<void> {
+    const v = memoryVersion();
+    if (recordEmbeds && recordEmbedsVersion === v) return;
+    const vectors = await embedBatch(records.map(recordText));
+    recordEmbeds = vectors;
+    recordEmbedIds = records.map((r) => r.id);
+    recordEmbedsVersion = v;
+  }
+
+  async retrieve(profile: ProjectProfile, k: number): Promise<RetrievalHit[]> {
+    const records = allRecords();
+    const queryText = [
+      profile.raw,
+      profile.keywords.join(" "),
+      profile.tech.join(" "),
+      profile.marketBet.join(" "),
+      profile.teamDynamics.join(" "),
+    ].join(" . ");
+
+    try {
+      await this.ensureRecordEmbeds(records);
+      const [qVec] = await embedBatch([queryText]);
+      const byId = new Map(recordEmbedIds.map((id, i) => [id, recordEmbeds![i]]));
+
+      const scored = records.map((r) => {
+        const emb = byId.get(r.id);
+        const textScore = emb ? denseCosine(qVec, emb) : 0;
+        const dim = dimensionMatch(profile, r);
+        const combined = 0.55 * textScore + 0.45 * dim.score;
+        return { r, combined, textScore, dim };
+      });
+      scored.sort((a, b) => b.combined - a.combined);
+
+      return scored.slice(0, k).map(({ r, combined, textScore, dim }) => ({
+        recordId: r.id,
+        webUrl: `/case/${r.id}`,
+        title: r.name,
+        extracts: [
+          { text: r.whatWentWrong, relevanceScore: Number(textScore.toFixed(4)) },
+          { text: `Apuesta: ${r.assumption}`, relevanceScore: Number(textScore.toFixed(4)) },
+        ],
+        resourceType: "listItem",
+        sensitivityLabel: null,
+        score: Number(combined.toFixed(4)),
+        matchedDimensions: dim.labels,
+        record: r,
+      }));
+    } catch (err: any) {
+      // Sin red / sin cuota: degrada al TF-IDF determinista (nunca se rompe).
+      console.warn(`[retriever:embeddings] falló (${err?.message}); uso TF-IDF.`);
+      return getSynthetic().retrieve(profile, k);
+    }
   }
 }
 
@@ -402,6 +475,10 @@ function getSynthetic(): SyntheticRetriever {
 
 export function getRetriever(): MemoryRetriever {
   const which = (process.env.RETRIEVER ?? "synthetic").toLowerCase();
+  if (which === "embeddings" || which === "semantic") {
+    if (embeddingsAvailable()) return new EmbeddingRetriever();
+    console.warn("[retriever] Embeddings sin proveedor (define GITHUB_TOKEN o Azure OpenAI) — uso synthetic.");
+  }
   if (which === "workiq") {
     const hasCreds =
       process.env.WORKIQ_TENANT_ID &&
