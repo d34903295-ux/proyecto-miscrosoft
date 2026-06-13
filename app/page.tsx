@@ -126,7 +126,7 @@ export default function Home() {
       const res = await fetch("/api/premortem", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description, depth }),
+        body: JSON.stringify({ description, depth, lang }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Error desconocido");
@@ -309,7 +309,7 @@ export default function Home() {
       </section>
 
       <div ref={reportAnchor} />
-      {report && lang === "en" && (
+      {report && lang === "en" && report.lang !== "en" && (
         <div className="statusline no-print">{t(lang, "reportLangNote")}</div>
       )}
       {report && <Report report={report} />}

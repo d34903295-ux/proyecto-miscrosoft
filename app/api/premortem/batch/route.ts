@@ -22,6 +22,7 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const depth = parseDepth(body?.depth);
     const save = body?.save !== false;
+    const lang = body?.lang === "en" ? "en" : "es";
     const raw: any[] = Array.isArray(body?.projects) ? body.projects : [];
 
     const projects = raw
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
     const origin = new URL(req.url).origin;
     const results = await Promise.all(
       projects.map(async (p) => {
-        const { report, cached } = await analyzeProject(p.description, depth, save, origin);
+        const { report, cached } = await analyzeProject(p.description, depth, save, origin, lang);
         return { name: p.name, report, cached };
       })
     );

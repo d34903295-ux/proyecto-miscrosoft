@@ -94,7 +94,7 @@ const STR: Dict = {
   clear: { es: "[ limpiar ]", en: "[ clear ]" },
   reportLangNote: {
     es: "",
-    en: "Note: the report content is generated in Spanish — the language of the institutional memory archive. UI is bilingual.",
+    en: "Note: no Foundry model was available to translate, so this report stayed in Spanish (the archive language). Set LLM_PROVIDER=github to get it in English.",
   },
   footerA: { es: "memoria vía Microsoft IQ (Foundry IQ) — recuperador", en: "memory via Microsoft IQ (Foundry IQ) — retriever" },
   footerB: { es: "razonamiento", en: "reasoning" },
