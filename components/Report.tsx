@@ -565,16 +565,18 @@ function TraceSection({ trace }: { trace: TraceStep[] }) {
   if (!trace || trace.length === 0) return null;
   return (
     <div className="trace">
-      <div className="trace-log">
+      <div className="trace-log trace-timeline">
+        <span className="trace-spine" aria-hidden="true" />
         {trace.map((t, i) => (
           <motion.div
             className="trace-row"
             key={t.step}
-            initial={{ opacity: 0, x: -10 }}
+            initial={{ opacity: 0, x: -12 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.35, delay: i * 0.09, ease: EASE }}
+            viewport={{ once: true, margin: "-40px 0px" }}
+            transition={{ duration: 0.4, delay: i * 0.1, ease: EASE }}
           >
+            <span className="trace-node" aria-hidden="true" />
             <span className="trace-n">[{t.step}]</span>
             <span className="trace-name">{t.name}</span>
             <span className="trace-detail">{t.detail}</span>

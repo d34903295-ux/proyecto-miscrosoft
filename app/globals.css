@@ -2197,3 +2197,138 @@ button.primary:hover:not(:disabled)::after {
   .atmo-grain { display: none; }
   .shell { backdrop-filter: none; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   NIVEL 2 — chat de evidencia, command palette, timeline de traza
+   ════════════════════════════════════════════════════════════ */
+
+/* ── interrogá la evidencia (chat grounded) ── */
+.chat-log {
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 12px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.chat-turn { display: flex; flex-direction: column; gap: 6px; }
+.chat-q { color: var(--ink); }
+.chat-a { color: var(--ink-2); font-family: var(--prose); line-height: 1.55; }
+.chat-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+  padding: 1px 6px;
+  margin-right: 6px;
+  color: var(--ink-dim);
+}
+.chat-tag.amber { color: var(--amber); border-color: var(--amber-dim); }
+.chat-meta { font-size: 11px; color: var(--ink-dim); margin-top: 4px; }
+.chat-typing { color: var(--amber); }
+.chat-typing::after {
+  content: "▋";
+  animation: blink 1s steps(1) infinite;
+}
+
+/* ── command palette ⌘K ── */
+.cmdk-fab {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 50;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  padding: 8px 12px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.cmdk-fab:hover { color: var(--amber); border-color: var(--amber-dim); }
+.cmdk-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  animation: cmdk-in 0.16s ease;
+}
+@keyframes cmdk-in { from { opacity: 0; } to { opacity: 1; } }
+.cmdk-panel {
+  width: min(560px, 92vw);
+  background: var(--bg-2);
+  border: 1px solid var(--amber-dim);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+}
+.cmdk-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 15px;
+  padding: 16px 18px;
+  outline: none;
+}
+.cmdk-list { max-height: 50vh; overflow-y: auto; padding: 6px; }
+.cmdk-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  color: var(--ink-2);
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  padding: 11px 12px;
+  cursor: pointer;
+}
+.cmdk-item.on { background: var(--amber); color: var(--amber-ink); }
+.cmdk-item.on:hover { background: var(--amber); color: var(--amber-ink); }
+.cmdk-hint { font-size: 11px; opacity: 0.7; }
+.cmdk-empty { color: var(--ink-dim); padding: 14px 12px; }
+.cmdk-foot {
+  border-top: 1px solid var(--line);
+  padding: 8px 14px;
+  font-size: 11px;
+  color: var(--ink-dim);
+  letter-spacing: 0.06em;
+}
+@media (max-width: 640px) { .cmdk-fab { right: 12px; bottom: 12px; } }
+
+/* ── traza: timeline con spine y nodos ── */
+.trace-timeline { position: relative; padding-left: 18px; }
+.trace-spine {
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: linear-gradient(var(--amber-dim), var(--line));
+}
+.trace-timeline .trace-row { position: relative; }
+.trace-node {
+  position: absolute;
+  left: -17px;
+  top: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 0 3px var(--bg);
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRecordById } from "@/lib/retrieval";
+import CaseChat from "@/components/CaseChat";
 
 export const dynamic = "force-dynamic";
 
@@ -100,10 +101,11 @@ export default function CasePage({ params }: { params: { id: string } }) {
         </div>
       </section>
 
+      <CaseChat caseId={record.id} />
+
       <div className="footer">
-        Registro de la memoria de la empresa (datos sintéticos para el MVP). En producción provendría
-        de <b>Microsoft Work IQ / Copilot Retrieval API</b> a través del mismo contrato de
-        recuperación.
+        Registro de la memoria de la empresa. La recuperación corre sobre el mismo contrato de{" "}
+        <b>Microsoft Foundry IQ</b> y el Q&amp;A razona con un modelo de <b>Microsoft Foundry</b>.
       </div>
     </div>
   );
