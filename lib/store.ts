@@ -45,6 +45,8 @@ export class FileStore implements DocumentStore {
   }
 
   put(collection: string, id: string, doc: unknown): void {
+    // Validar SIEMPRE antes del try (no enmascarar path traversal con el catch).
+    assertSafeId(collection);
     assertSafeId(id);
     this.mem.set(this.key(collection, id), doc);
     try {
@@ -58,6 +60,7 @@ export class FileStore implements DocumentStore {
   }
 
   get<T>(collection: string, id: string): T | null {
+    assertSafeId(collection);
     assertSafeId(id);
     const cached = this.mem.get(this.key(collection, id));
     if (cached !== undefined) return cached as T;
@@ -73,6 +76,7 @@ export class FileStore implements DocumentStore {
   }
 
   list<T>(collection: string, limit = 100): { id: string; doc: T }[] {
+    assertSafeId(collection);
     const byId = new Map<string, T>();
     // archivo (durabilidad)
     try {
@@ -98,6 +102,7 @@ export class FileStore implements DocumentStore {
   }
 
   delete(collection: string, id: string): boolean {
+    assertSafeId(collection);
     assertSafeId(id);
     const had = this.mem.delete(this.key(collection, id));
     try {
