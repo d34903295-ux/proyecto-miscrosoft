@@ -62,7 +62,7 @@ function extractiveAnswer(r: PastProjectRecord, question: string): string {
   return `${best.text} (${best.label}, expediente ${r.id})`;
 }
 
-function openAICompatTarget():
+export function openAICompatTarget():
   | { url: string; headers: Record<string, string>; model: string; provider: string }
   | null {
   const provider = (process.env.LLM_PROVIDER ?? "stub").toLowerCase();

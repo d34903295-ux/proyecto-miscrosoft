@@ -16,6 +16,7 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const description: string = (body?.description ?? "").toString();
     const depth = parseDepth(body?.depth);
+    const lang = body?.lang === "en" ? "en" : "es";
 
     if (description.trim().length < 20) {
       inc("premortem_invalid");
@@ -36,7 +37,8 @@ export async function POST(req: Request) {
       description,
       depth,
       body?.save !== false,
-      new URL(req.url).origin
+      new URL(req.url).origin,
+      lang
     );
 
     const ms = Date.now() - t0;

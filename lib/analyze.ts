@@ -5,10 +5,13 @@
 
 import type { PreMortemReport } from "./types";
 import { generatePreMortem } from "./agent";
+import { maybeTranslateReport } from "./translate";
 import { cacheGet, cacheKey, cachePut } from "./cache";
 import { getStore, newId } from "./store";
 import { log } from "./logger";
 import { notifyReport } from "./webhook";
+
+export type Lang = "es" | "en";
 
 /** Profundidades de análisis expuestas en API y UI. */
 export const DEPTHS = {
@@ -37,13 +40,16 @@ export async function analyzeProject(
   description: string,
   depth: Depth,
   save: boolean,
-  baseUrl?: string
+  baseUrl?: string,
+  lang: Lang = "es"
 ): Promise<AnalyzeResult> {
-  const key = cacheKey(description, depth);
+  const key = cacheKey(description, `${depth}|${lang}`);
   const hit = cacheGet(key);
   if (hit && (!save || hit.id)) return { report: hit, cached: true };
 
   const report = await generatePreMortem(description, DEPTHS[depth]);
+  // Traduce el contenido al idioma pedido (si hay modelo); si no, queda en español.
+  await maybeTranslateReport(report, lang);
 
   if (save) {
     report.id = newId();

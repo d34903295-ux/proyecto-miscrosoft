@@ -323,6 +323,8 @@ export interface PreMortemReport {
   generatedWith: string;
   /** Recuperador de memoria usado (synthetic | foundryiq | azuresearch | workiq). */
   retrieverUsed: string;
+  /** Idioma del contenido del reporte ("es" por defecto; "en" si se tradujo). */
+  lang?: "es" | "en";
   /** Cuántos casos pasados se inspeccionaron. */
   casesInspected: number;
   generatedAt: string;
