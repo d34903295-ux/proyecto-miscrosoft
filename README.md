@@ -8,6 +8,14 @@
 
 Hecho para **Microsoft Agents League** · Track **Reasoning Agents**.
 
+**🌐 [Demo en vivo](https://mi-blockchain-is8r.vercel.app) · 🎥 Video: `añade tu enlace de YouTube` · 📖 [Cómo funciona](./COMO-FUNCIONA.md)**
+
+### Por qué destaca
+- 🧠 **El razonamiento se mide, no se afirma** — `npm run eval`: recuerdo **8/8**, integridad de evidencia, calibración y determinismo.
+- 🔍 **Recuerda, no inventa** — cada riesgo anclado a un **caso real abrible**; el agente se **refuta a sí mismo** (anti-confirmación) y recalibra su confianza.
+- 🤖 **Microsoft Foundry en vivo** — razona con un modelo de Foundry (GitHub Models); además expuesto como **herramienta MCP** para otros agentes.
+- 🏭 **Nivel producción** — auth + rate-limit, `/api/health` + métricas Prometheus, Docker, CI, **22 tests**, recuperación con embeddings, UI **bilingüe** y responsive.
+
 > 📖 ¿Cómo funciona, paso a paso? → **[`COMO-FUNCIONA.md`](./COMO-FUNCIONA.md)** (explicación para jueces).
 
 > **TL;DR (English):** Before launching a project, this reasoning agent searches
@@ -19,6 +27,19 @@ Hecho para **Microsoft Agents League** · Track **Reasoning Agents**.
 > **reasoning trace**, and ships with a **golden-set eval harness** (`npm run
 > eval`) that scores recall, evidence integrity, calibration and determinism —
 > currently **8/8 (100%)** on retrieval with zero integrity violations.
+
+---
+
+## 🎯 Cómo puntúa contra la rúbrica (para jueces)
+
+| Criterio | Peso | Dónde verlo en este proyecto |
+|---|---|---|
+| **Accuracy & Relevance** | 20% | `npm run eval` → recuerdo **8/8**; cada riesgo cita un caso real **abrible y verificable** (integridad de evidencia auditada). |
+| **Reasoning & Multi-step** | 20% | **7 pasos** auditables + paso **anti-confirmación** (se refuta a sí mismo y recalibra confianza) + **traza** visible. |
+| **Creativity & Originality** | 15% | "No predice, **recuerda**": consejo de administración simulado, "muéstrame mi funeral", punto de no retorno, **mundo 3D** de fracasos reales, endpoint **MCP**. |
+| **User Experience & Presentation** | 15% | Diseño "Terminal Forense", **bilingüe ES/EN**, responsive, panel de estado del motor en vivo, video explicativo. |
+| **Reliability & Safety** | 20% | Regla **recuerda-no-inventa** (anti-alucinación, verificable); auth + rate-limit; **22 tests** + CI; reintento 429 + modelo de respaldo; `/api/health`. |
+| **Community vote** | 10% | Comparte el proyecto en el Discord de Agents League. |
 
 ---
 
