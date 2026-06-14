@@ -14,7 +14,8 @@ function sevLevel(severity: number): "high" | "mid" | "low" {
   return "low";
 }
 
-export default function MemoryBrowser({ records }: { records: PastProjectRecord[] }) {
+export default function MemoryBrowser({ records, lang = "es" }: { records: PastProjectRecord[]; lang?: "es" | "en" }) {
+  const tr = (es: string, en: string) => (lang === "en" ? en : es);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
   const [client, setClient] = useState<string | null>(null);
@@ -54,7 +55,7 @@ export default function MemoryBrowser({ records }: { records: PastProjectRecord[
   return (
     <section className="section">
       <div className="field-head">
-        <span>&gt; buscar_en_la_memoria</span>
+        <span>&gt; {tr("buscar_en_la_memoria", "search_the_memory")}</span>
         <span>
           {filtered.length} / {records.length}
         </span>
@@ -64,18 +65,18 @@ export default function MemoryBrowser({ records }: { records: PastProjectRecord[
         value={q}
         onChange={(e) => setQ(e.target.value)}
         spellCheck={false}
-        aria-label="Buscar en la memoria de la empresa"
-        placeholder="// buscar por tecnología, cliente, tipo de fallo, palabra clave…"
+        aria-label={tr("Buscar en la memoria de la empresa", "Search the company memory")}
+        placeholder={tr("// buscar por tecnología, cliente, tipo de fallo, palabra clave…", "// search by technology, client, failure type, keyword…")}
       />
 
       <div className="presets" style={{ marginTop: 12 }}>
-        <span className="presets-label">// categoría:</span>
+        <span className="presets-label">{tr("// categoría:", "// category:")}</span>
         <button
           className={`chip-btn ${!cat ? "on" : ""}`}
           aria-pressed={!cat}
           onClick={() => setCat(null)}
         >
-          todas
+          {tr("todas", "all")}
         </button>
         {categories.map((c) => (
           <button
@@ -90,13 +91,13 @@ export default function MemoryBrowser({ records }: { records: PastProjectRecord[
       </div>
 
       <div className="presets" style={{ marginTop: 8 }}>
-        <span className="presets-label">// cliente:</span>
+        <span className="presets-label">{tr("// cliente:", "// client:")}</span>
         <button
           className={`chip-btn ${!client ? "on" : ""}`}
           aria-pressed={!client}
           onClick={() => setClient(null)}
         >
-          todos
+          {tr("todos", "all")}
         </button>
         {clients.map((c) => (
           <button
@@ -129,7 +130,7 @@ export default function MemoryBrowser({ records }: { records: PastProjectRecord[
             <div className="arch-snippet prose">{r.whatWentWrong}</div>
             <div className="tags" style={{ marginTop: 10 }}>
               <span className="tag">
-                <b>cliente</b> {r.clientType}
+                <b>{tr("cliente", "client")}</b> {r.clientType}
               </span>
               {r.tech.slice(0, 2).map((t) => (
                 <span className="tag" key={t}>
@@ -141,8 +142,8 @@ export default function MemoryBrowser({ records }: { records: PastProjectRecord[
         ))}
         {filtered.length === 0 && (
           <div className="readout" style={{ marginTop: 20, gridColumn: "1 / -1" }}>
-            // sin resultados{q ? ` para «${q}»` : ""}
-            {cat || client ? " con los filtros actuales" : ""}
+            {tr("// sin resultados", "// no results")}{q ? tr(` para «${q}»`, ` for «${q}»`) : ""}
+            {cat || client ? tr(" con los filtros actuales", " with the current filters") : ""}
           </div>
         )}
       </div>

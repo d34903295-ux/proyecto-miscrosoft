@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { EASE, GrowBar } from "@/components/motion";
+import { useLang } from "@/lib/i18n";
 
 interface RankRow {
   rank: number;
@@ -25,9 +26,9 @@ interface RankRow {
 }
 
 const DEPTHS = [
-  { key: "rapido", label: "rápido", hint: "3 riesgos" },
-  { key: "estandar", label: "estándar", hint: "6 riesgos" },
-  { key: "profundo", label: "profundo", hint: "10 riesgos" },
+  { key: "rapido", label: "rápido", en: "fast", hint: "3 riesgos" },
+  { key: "estandar", label: "estándar", en: "standard", hint: "6 riesgos" },
+  { key: "profundo", label: "profundo", en: "deep", hint: "10 riesgos" },
 ] as const;
 
 const EXAMPLE = `# Wallet fintech
@@ -53,6 +54,8 @@ function parseProjects(text: string): { name?: string; description: string }[] {
 }
 
 export default function PortafolioPage() {
+  const [lang] = useLang();
+  const tr = (es: string, en: string) => (lang === "en" ? en : es);
   const [text, setText] = useState("");
   const [depth, setDepth] = useState<string>("rapido");
   const [loading, setLoading] = useState(false);
@@ -90,10 +93,10 @@ export default function PortafolioPage() {
         </div>
         <div className="sys-right">
           <Link href="/informes" className="syslink">
-            // informes
+            {tr("// informes", "// reports")}
           </Link>
           <Link href="/" className="syslink">
-            &lt;&lt; volver
+            &lt;&lt; {tr("volver", "back")}
           </Link>
         </div>
       </div>
@@ -101,49 +104,50 @@ export default function PortafolioPage() {
       <div className="statusline">
         {loading ? (
           <>
-            <span className="run">&gt; analizando {projects.length} proyectos en paralelo…</span>
+            <span className="run">&gt; {tr("analizando", "analyzing")} {projects.length} {tr("proyectos en paralelo…", "projects in parallel…")}</span>
             <span className="cursor" />
           </>
         ) : ranking ? (
           <>
-            <span className="ok">&gt; portafolio analizado</span> · {ranking.length} proyectos
-            rankeados por riesgo
+            <span className="ok">&gt; {tr("portafolio analizado", "portfolio analyzed")}</span> · {ranking.length}{" "}
+            {tr("proyectos rankeados por riesgo", "projects ranked by risk")}
           </>
         ) : (
           <>
-            &gt; triage de portafolio — pega varios proyectos separados por ---
+            &gt; {tr("triage de portafolio — pega varios proyectos separados por ---", "portfolio triage — paste several projects separated by ---")}
             <span className="cursor" />
           </>
         )}
       </div>
 
       <section className="section">
-        <div className="kicker">// portafolio · ¿cuál de estas apuestas mata primero?</div>
+        <div className="kicker">{tr("// portafolio · ¿cuál de estas apuestas mata primero?", "// portfolio · which of these bets dies first?")}</div>
         <h1 className="manifesto" style={{ fontSize: "clamp(28px, 5vw, 52px)" }}>
-          Triage de iniciativas
+          {tr("Triage de iniciativas", "Initiative triage")}
         </h1>
         <p className="lede prose">
-          Antes de repartir presupuesto: el agente analiza cada proyecto contra la memoria
-          institucional, en paralelo, y los ordena del más al menos riesgoso — cada veredicto
-          anclado a casos reales.
+          {tr(
+            "Antes de repartir presupuesto: el agente analiza cada proyecto contra la memoria institucional, en paralelo, y los ordena del más al menos riesgoso — cada veredicto anclado a casos reales.",
+            "Before you allocate budget: the agent analyzes each project against institutional memory, in parallel, and ranks them from most to least risky — every verdict anchored to real cases."
+          )}
         </p>
       </section>
 
       <section className="section no-print">
         <div className="field-head">
-          <span>&gt; proyectos (separados por ---, “# Título” opcional)</span>
-          <span>{projects.length} detectados</span>
+          <span>&gt; {tr('proyectos (separados por ---, "# Título" opcional)', 'projects (separated by ---, "# Title" optional)')}</span>
+          <span>{projects.length} {tr("detectados", "detected")}</span>
         </div>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           spellCheck={false}
           rows={12}
-          aria-label="Lista de proyectos a analizar"
-          placeholder={"# Proyecto A\ndescripción…\n---\n# Proyecto B\ndescripción…"}
+          aria-label={tr("Lista de proyectos a analizar", "List of projects to analyze")}
+          placeholder={"# Project A\ndescription…\n---\n# Project B\ndescription…"}
         />
         <div className="presets">
-          <span className="presets-label">// profundidad:</span>
+          <span className="presets-label">{tr("// profundidad:", "// depth:")}</span>
           {DEPTHS.map((d) => (
             <button
               key={d.key}
@@ -153,11 +157,11 @@ export default function PortafolioPage() {
               disabled={loading}
               title={d.hint}
             >
-              {d.label}
+              {tr(d.label, d.en)}
             </button>
           ))}
           <button className="chip-btn" onClick={() => setText(EXAMPLE)} disabled={loading}>
-            cargar ejemplo
+            {tr("cargar ejemplo", "load example")}
           </button>
         </div>
         <div className="controls">
@@ -165,10 +169,10 @@ export default function PortafolioPage() {
             {loading ? (
               <>
                 <span className="spinner" />
-                analizando…
+                {tr("analizando…", "analyzing…")}
               </>
             ) : (
-              `[ analizar ${projects.length || ""} proyectos ]`
+              tr(`[ analizar ${projects.length || ""} proyectos ]`, `[ analyze ${projects.length || ""} projects ]`)
             )}
           </button>
         </div>
@@ -178,8 +182,8 @@ export default function PortafolioPage() {
       {ranking && (
         <section className="section">
           <div className="field-head">
-            <span>// modo VC · orden de inversión (menos riesgo primero, leído de abajo hacia arriba)</span>
-            <span>memoria institucional como juez</span>
+            <span>{tr("// modo VC · orden de inversión (menos riesgo primero, leído de abajo hacia arriba)", "// VC mode · investment order (least risk first, read bottom-up)")}</span>
+            <span>{tr("memoria institucional como juez", "institutional memory as the judge")}</span>
           </div>
           <div className="insp-list" style={{ marginTop: 12 }}>
             {ranking.map((r, i) => (
@@ -195,7 +199,7 @@ export default function PortafolioPage() {
                     <span className="pf-name">{r.name}</span>
                     <span className="pf-index">
                       {r.riskIndex}
-                      <small>/100 riesgo ({r.level}) · éxito relativo {r.successProb}%</small>
+                      <small>/100 {tr("riesgo", "risk")} ({r.level}) · {tr("éxito relativo", "relative success")} {r.successProb}%</small>
                     </span>
                   </div>
                   <div className="pf-bar">
@@ -213,12 +217,12 @@ export default function PortafolioPage() {
                     <span className="pf-links">
                       {r.topCase && (
                         <Link className="cmd" href={`/case/${r.topCase.caseId}`}>
-                          &gt;&gt; caso «{r.topCase.caseName.split("—")[0].trim()}»
+                          &gt;&gt; {tr("caso", "case")} «{r.topCase.caseName.split("—")[0].trim()}»
                         </Link>
                       )}
                       {r.id && (
                         <Link className="cmd" href={`/informe/${r.id}`}>
-                          &gt;&gt; pre-mortem completo
+                          &gt;&gt; {tr("pre-mortem completo", "full pre-mortem")}
                         </Link>
                       )}
                     </span>
@@ -231,8 +235,8 @@ export default function PortafolioPage() {
       )}
 
       <div className="footer">
-        Análisis en paralelo con caché por contenido. <b>MICROSOFT AGENTS LEAGUE</b> · TRACK
-        REASONING AGENTS.
+        {tr("Análisis en paralelo con caché por contenido.", "Parallel analysis with content-based caching.")}{" "}
+        <b>MICROSOFT AGENTS LEAGUE</b> · TRACK REASONING AGENTS.
       </div>
     </div>
   );

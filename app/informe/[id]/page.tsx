@@ -6,18 +6,21 @@ import { notFound } from "next/navigation";
 import type { PreMortemReport } from "@/lib/types";
 import { getStore } from "@/lib/store";
 import Report from "@/components/Report";
+import { getServerLang, makeTr } from "@/lib/serverlang";
 
 export const dynamic = "force-dynamic";
 
-function fmtDate(iso: string): string {
+function fmtDate(iso: string, lang: string): string {
   try {
-    return new Date(iso).toLocaleString("es", { dateStyle: "medium", timeStyle: "short" });
+    return new Date(iso).toLocaleString(lang === "en" ? "en-US" : "es", { dateStyle: "medium", timeStyle: "short" });
   } catch {
     return iso;
   }
 }
 
 export default function InformePage({ params }: { params: { id: string } }) {
+  const lang = getServerLang();
+  const tr = makeTr(lang);
   let report: PreMortemReport | null = null;
   try {
     report = getStore().get<PreMortemReport>("informes", params.id);
@@ -35,21 +38,22 @@ export default function InformePage({ params }: { params: { id: string } }) {
         </div>
         <div className="sys-right">
           <Link href="/informes" className="syslink">
-            // informes
+            {tr("// informes", "// reports")}
           </Link>
           <Link href="/" className="syslink">
-            &lt;&lt; volver
+            &lt;&lt; {tr("volver", "back")}
           </Link>
         </div>
       </div>
 
       <div className="statusline">
-        <span className="ok">&gt; informe {params.id}</span> · generado {fmtDate(report.generatedAt)} ·
-        motor {report.generatedWith} · memoria {report.retrieverUsed}
+        <span className="ok">&gt; {tr("informe", "report")} {params.id}</span> · {tr("generado", "generated")}{" "}
+        {fmtDate(report.generatedAt, lang)} · {tr("motor", "engine")} {report.generatedWith} ·{" "}
+        {tr("memoria", "memory")} {report.retrieverUsed}
       </div>
 
       <section className="section" style={{ paddingBottom: 0 }}>
-        <div className="kicker">// informe persistido · proyecto analizado</div>
+        <div className="kicker">{tr("// informe persistido · proyecto analizado", "// saved report · analyzed project")}</div>
         <p className="lede prose" style={{ marginTop: 10 }}>
           {report.profile.raw}
         </p>
@@ -58,7 +62,7 @@ export default function InformePage({ params }: { params: { id: string } }) {
       <Report report={report} />
 
       <div className="footer">
-        Informe persistido del historial. <b>MICROSOFT AGENTS LEAGUE</b> · TRACK REASONING AGENTS.
+        {tr("Informe persistido del historial.", "Saved report from the history.")} <b>MICROSOFT AGENTS LEAGUE</b> · TRACK REASONING AGENTS.
       </div>
     </div>
   );

@@ -52,7 +52,8 @@ const EMPTY = {
   outcome: "", severity: 3, failureCategory: "Adopción/onboarding", mitigation: "",
 };
 
-export default function MemoryLoader() {
+export default function MemoryLoader({ lang = "es" }: { lang?: "es" | "en" }) {
+  const tr = (es: string, en: string) => (lang === "en" ? en : es);
   const router = useRouter();
   const [panel, setPanelState] = useState<string | null>(null);
   const set = (s: string | null) => setPanelState(s);
@@ -74,15 +75,18 @@ export default function MemoryLoader() {
       });
       const d = await res.json();
       if (res.ok || d.added > 0) {
-        setCsvMsg({ ok: true, text: `Importados ${d.added} caso(s)${d.rejected ? ` · ${d.rejected} rechazado(s)` : ""}. La memoria ya los puede recuperar.` });
+        setCsvMsg({ ok: true, text: tr(
+          `Importados ${d.added} caso(s)${d.rejected ? ` · ${d.rejected} rechazado(s)` : ""}. La memoria ya los puede recuperar.`,
+          `Imported ${d.added} case(s)${d.rejected ? ` · ${d.rejected} rejected` : ""}. The memory can already retrieve them.`
+        ) });
         setCsv("");
         router.refresh();
       } else {
         const first = d.errors?.[0]?.problems?.join("; ") ?? d.error ?? "Error";
-        setCsvMsg({ ok: false, text: `Nada importado. ${first}` });
+        setCsvMsg({ ok: false, text: tr(`Nada importado. ${first}`, `Nothing imported. ${first}`) });
       }
     } catch {
-      setCsvMsg({ ok: false, text: "Error de red." });
+      setCsvMsg({ ok: false, text: tr("Error de red.", "Network error.") });
     } finally {
       setCsvBusy(false);
     }
@@ -120,14 +124,17 @@ export default function MemoryLoader() {
       });
       const d = await res.json();
       if (res.ok) {
-        setAddMsg({ ok: true, text: `Caso «${d.added}» agregado. Ya es recuperable en el siguiente pre-mortem.` });
+        setAddMsg({ ok: true, text: tr(
+          `Caso «${d.added}» agregado. Ya es recuperable en el siguiente pre-mortem.`,
+          `Case «${d.added}» added. It's already retrievable in the next pre-mortem.`
+        ) });
         setForm({ ...EMPTY });
         router.refresh();
       } else {
-        setAddMsg({ ok: false, text: (d.details?.[0] ?? d.error ?? "Caso inválido") as string });
+        setAddMsg({ ok: false, text: (d.details?.[0] ?? d.error ?? tr("Caso inválido", "Invalid case")) as string });
       }
     } catch {
-      setAddMsg({ ok: false, text: "Error de red." });
+      setAddMsg({ ok: false, text: tr("Error de red.", "Network error.") });
     } finally {
       setAddBusy(false);
     }
@@ -138,24 +145,35 @@ export default function MemoryLoader() {
   return (
     <section className="section no-print">
       <div className="field-head">
-        <span>// cargar la memoria de tu empresa</span>
-        <span>aquí entra tu historia</span>
+        <span>{tr("// cargar la memoria de tu empresa", "// load your company's memory")}</span>
+        <span>{tr("aquí entra tu historia", "your history goes here")}</span>
       </div>
       <p className="lede prose" style={{ marginTop: 0 }}>
-        El agente solo recuerda lo que le cargas. Sube los <b>postmortems de tu empresa</b> (CSV) o
-        agrega un caso a mano — entran al índice y son <b>recuperables al instante</b> en el siguiente
-        pre-mortem. (En producción se conectan vía <b>Foundry IQ</b>.)
+        {lang === "en" ? (
+          <>
+            The agent only remembers what you load. Upload your company's <b>postmortems</b> (CSV) or add a
+            case by hand — they enter the index and are <b>retrievable instantly</b> in the next pre-mortem.
+            (In production they connect via <b>Foundry IQ</b>.)
+          </>
+        ) : (
+          <>
+            El agente solo recuerda lo que le cargas. Sube los <b>postmortems de tu empresa</b> (CSV) o agrega
+            un caso a mano — entran al índice y son <b>recuperables al instante</b> en el siguiente pre-mortem.
+            (En producción se conectan vía <b>Foundry IQ</b>.)
+          </>
+        )}
       </p>
 
-      <Section id="csv" title="// importar CSV (masivo)" hint="hasta 200 filas" panel={p}>
+      <Section id="csv" title={tr("// importar CSV (masivo)", "// import CSV (bulk)")} hint={tr("hasta 200 filas", "up to 200 rows")} panel={p}>
         <p className="aiset-hint prose">
-          Una fila por postmortem. Cabecera con los campos del caso; <code>tech</code> e{" "}
-          <code>ignoredSignals</code> separados por <code>|</code> dentro de la celda.
+          {tr("Una fila por postmortem. Cabecera con los campos del caso;", "One row per postmortem. Header with the case fields;")}{" "}
+          <code>tech</code> {tr("e", "and")} <code>ignoredSignals</code> {tr("separados por", "separated by")}{" "}
+          <code>|</code> {tr("dentro de la celda.", "inside the cell.")}
         </p>
         <div className="controls" style={{ marginBottom: 10 }}>
-          <button onClick={() => download("plantilla-memoria.csv", TEMPLATE)}>[ descargar plantilla ]</button>
+          <button onClick={() => download("memory-template.csv", TEMPLATE)}>{tr("[ descargar plantilla ]", "[ download template ]")}</button>
           <label className="chip-btn" style={{ cursor: "pointer" }}>
-            [ elegir archivo .csv ]
+            {tr("[ elegir archivo .csv ]", "[ choose .csv file ]")}
             <input type="file" accept=".csv,text/csv" onChange={onFile} style={{ display: "none" }} />
           </label>
         </div>
@@ -164,18 +182,18 @@ export default function MemoryLoader() {
           style={{ width: "100%", minHeight: 130, fontFamily: "var(--mono)" }}
           value={csv}
           onChange={(e) => setCsv(e.target.value)}
-          placeholder={"name,year,clientType,tech,marketBet,...\n\"Caso\",2022,startup,web|IA/ML,..."}
+          placeholder={"name,year,clientType,tech,marketBet,...\n\"Case\",2022,startup,web|IA/ML,..."}
           spellCheck={false}
         />
         <div className="controls" style={{ marginTop: 10 }}>
           <button className="primary" onClick={importCsv} disabled={csvBusy || !csv.trim()}>
-            {csvBusy ? "importando…" : "[ importar a la memoria ]"}
+            {csvBusy ? tr("importando…", "importing…") : tr("[ importar a la memoria ]", "[ import to memory ]")}
           </button>
         </div>
         {csvMsg && <div className={csvMsg.ok ? "feedback-thanks" : "error"} style={{ marginTop: 10 }}>{csvMsg.text}</div>}
       </Section>
 
-      <Section id="one" title="// agregar un caso a mano" hint="1 postmortem" panel={p}>
+      <Section id="one" title={tr("// agregar un caso a mano", "// add a case by hand")} hint={tr("1 postmortem", "1 postmortem")} panel={p}>
         <div className="mem-form">
           <label className="mf">name<input className="search" value={form.name} onChange={(e) => upd("name", e.target.value)} placeholder="Atlas — portal de autoservicio" /></label>
           <label className="mf mf-sm">year<input className="search" type="number" value={form.year} onChange={(e) => upd("year", e.target.value)} /></label>
@@ -201,14 +219,14 @@ export default function MemoryLoader() {
             ))}
           </div>
         </div>
-        <label className="mf mf-full">description<textarea className="search" value={form.description} onChange={(e) => upd("description", e.target.value)} placeholder="Qué era el proyecto…" /></label>
-        <label className="mf mf-full">assumption (la apuesta)<textarea className="search" value={form.assumption} onChange={(e) => upd("assumption", e.target.value)} placeholder="El supuesto central…" /></label>
-        <label className="mf mf-full">whatWentWrong<textarea className="search" value={form.whatWentWrong} onChange={(e) => upd("whatWentWrong", e.target.value)} placeholder="Qué salió mal…" /></label>
-        <label className="mf mf-full">ignoredSignals (una por línea)<textarea className="search" value={form.ignoredSignals} onChange={(e) => upd("ignoredSignals", e.target.value)} placeholder={"Señal ignorada 1\nSeñal ignorada 2"} /></label>
-        <label className="mf mf-full">outcome<textarea className="search" value={form.outcome} onChange={(e) => upd("outcome", e.target.value)} placeholder="El resultado…" /></label>
-        <label className="mf mf-full">mitigation (la lección)<textarea className="search" value={form.mitigation} onChange={(e) => upd("mitigation", e.target.value)} placeholder="Qué se debió hacer…" /></label>
+        <label className="mf mf-full">description<textarea className="search" value={form.description} onChange={(e) => upd("description", e.target.value)} placeholder={tr("Qué era el proyecto…", "What the project was…")} /></label>
+        <label className="mf mf-full">{tr("assumption (la apuesta)", "assumption (the bet)")}<textarea className="search" value={form.assumption} onChange={(e) => upd("assumption", e.target.value)} placeholder={tr("El supuesto central…", "The core assumption…")} /></label>
+        <label className="mf mf-full">whatWentWrong<textarea className="search" value={form.whatWentWrong} onChange={(e) => upd("whatWentWrong", e.target.value)} placeholder={tr("Qué salió mal…", "What went wrong…")} /></label>
+        <label className="mf mf-full">{tr("ignoredSignals (una por línea)", "ignoredSignals (one per line)")}<textarea className="search" value={form.ignoredSignals} onChange={(e) => upd("ignoredSignals", e.target.value)} placeholder={tr("Señal ignorada 1\nSeñal ignorada 2", "Ignored signal 1\nIgnored signal 2")} /></label>
+        <label className="mf mf-full">outcome<textarea className="search" value={form.outcome} onChange={(e) => upd("outcome", e.target.value)} placeholder={tr("El resultado…", "The outcome…")} /></label>
+        <label className="mf mf-full">{tr("mitigation (la lección)", "mitigation (the lesson)")}<textarea className="search" value={form.mitigation} onChange={(e) => upd("mitigation", e.target.value)} placeholder={tr("Qué se debió hacer…", "What should have been done…")} /></label>
         <div className="controls" style={{ marginTop: 10 }}>
-          <button className="primary" onClick={addCase} disabled={addBusy}>{addBusy ? "agregando…" : "[ agregar a la memoria ]"}</button>
+          <button className="primary" onClick={addCase} disabled={addBusy}>{addBusy ? tr("agregando…", "adding…") : tr("[ agregar a la memoria ]", "[ add to memory ]")}</button>
         </div>
         {addMsg && <div className={addMsg.ok ? "feedback-thanks" : "error"} style={{ marginTop: 10 }}>{addMsg.text}</div>}
       </Section>
