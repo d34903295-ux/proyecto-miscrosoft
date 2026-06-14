@@ -11,25 +11,41 @@ import { useEffect, useState } from "react";
 export type Lang = "es" | "en";
 const LS_KEY = "premortem-lang";
 
+/** Persiste el idioma en cookie también, para que las páginas de servidor
+ *  (que no ven localStorage) rendericen en el mismo idioma. */
+function persist(l: Lang) {
+  try {
+    localStorage.setItem(LS_KEY, l);
+  } catch {
+    /* sin localStorage */
+  }
+  try {
+    document.cookie = `${LS_KEY}=${l}; path=/; max-age=31536000; samesite=lax`;
+  } catch {
+    /* sin document */
+  }
+}
+
 export function useLang(): [Lang, (l: Lang) => void] {
   const [lang, setLangState] = useState<Lang>("es");
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_KEY);
-      if (saved === "en" || saved === "es") setLangState(saved);
-      else if (navigator.language && !navigator.language.toLowerCase().startsWith("es"))
-        setLangState("en");
+      if (saved === "en" || saved === "es") {
+        setLangState(saved);
+        persist(saved); // asegura la cookie para el servidor
+      } else {
+        const auto = navigator.language && !navigator.language.toLowerCase().startsWith("es") ? "en" : "es";
+        setLangState(auto);
+        persist(auto);
+      }
     } catch {
       /* sin localStorage: queda es */
     }
   }, []);
   const setLang = (l: Lang) => {
     setLangState(l);
-    try {
-      localStorage.setItem(LS_KEY, l);
-    } catch {
-      /* sin localStorage: no persiste */
-    }
+    persist(l);
   };
   return [lang, setLang];
 }

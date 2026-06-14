@@ -14,14 +14,22 @@ interface Turn {
   loading?: boolean;
 }
 
-const SUGGESTED = [
+const SUGGESTED_ES = [
   "¿Cuál fue la causa raíz del fracaso?",
   "¿Qué señal se ignoró primero?",
   "¿Qué habrían debido hacer distinto?",
   "¿Cuánto capital se perdió?",
 ];
+const SUGGESTED_EN = [
+  "What was the root cause of the failure?",
+  "Which signal was ignored first?",
+  "What should they have done differently?",
+  "How much capital was lost?",
+];
 
-export default function CaseChat({ caseId }: { caseId: string }) {
+export default function CaseChat({ caseId, lang = "es" }: { caseId: string; lang?: "es" | "en" }) {
+  const tr = (es: string, en: string) => (lang === "en" ? en : es);
+  const SUGGESTED = lang === "en" ? SUGGESTED_EN : SUGGESTED_ES;
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,12 +68,14 @@ export default function CaseChat({ caseId }: { caseId: string }) {
   return (
     <section className="section">
       <div className="field-head">
-        <span>// interrogá la evidencia</span>
-        <span>grounded · recuerda, no inventa</span>
+        <span>{tr("// interrogá la evidencia", "// interrogate the evidence")}</span>
+        <span>{tr("grounded · recuerda, no inventa", "grounded · recall, don't invent")}</span>
       </div>
       <p className="lede prose" style={{ marginTop: 0 }}>
-        Pregúntale a este expediente. El modelo de Microsoft Foundry responde{" "}
-        <b>solo con lo que dice el caso</b>; si la respuesta no está aquí, lo dice — no inventa.
+        {tr(
+          "Pregúntale a este expediente. El modelo de Microsoft Foundry responde solo con lo que dice el caso; si la respuesta no está aquí, lo dice — no inventa.",
+          "Ask this case file. The Microsoft Foundry model answers using only what the case says; if the answer isn't here, it says so — it doesn't invent."
+        )}
       </p>
 
       {turns.length > 0 && (
@@ -73,14 +83,14 @@ export default function CaseChat({ caseId }: { caseId: string }) {
           {turns.map((t, i) => (
             <div key={i} className="chat-turn">
               <div className="chat-q">
-                <span className="chat-tag">tú</span> {t.q}
+                <span className="chat-tag">{tr("tú", "you")}</span> {t.q}
               </div>
               <div className="chat-a">
-                <span className="chat-tag amber">archivo</span>{" "}
-                {t.loading ? <span className="chat-typing">consultando el expediente…</span> : t.a}
+                <span className="chat-tag amber">{tr("archivo", "archive")}</span>{" "}
+                {t.loading ? <span className="chat-typing">{tr("consultando el expediente…", "querying the case file…")}</span> : t.a}
                 {!t.loading && t.a && (
                   <div className="chat-meta">
-                    {t.grounded ? `vía modelo Foundry (${t.provider})` : "respuesta extractiva (sin modelo)"}
+                    {t.grounded ? tr(`vía modelo Foundry (${t.provider})`, `via Foundry model (${t.provider})`) : tr("respuesta extractiva (sin modelo)", "extractive answer (no model)")}
                   </div>
                 )}
               </div>
@@ -90,7 +100,7 @@ export default function CaseChat({ caseId }: { caseId: string }) {
       )}
 
       <div className="presets" style={{ marginTop: 12 }}>
-        <span className="presets-label">// sugeridas:</span>
+        <span className="presets-label">{tr("// sugeridas:", "// suggested:")}</span>
         {SUGGESTED.map((s) => (
           <button key={s} className="chip-btn" onClick={() => ask(s)} disabled={busy}>
             {s}
@@ -107,11 +117,11 @@ export default function CaseChat({ caseId }: { caseId: string }) {
           onKeyDown={(e) => {
             if (e.key === "Enter") ask(input);
           }}
-          placeholder="// escribe tu pregunta sobre este caso…"
-          aria-label="Pregunta sobre el expediente"
+          placeholder={tr("// escribe tu pregunta sobre este caso…", "// type your question about this case…")}
+          aria-label={tr("Pregunta sobre el expediente", "Question about the case file")}
         />
         <button className="primary" onClick={() => ask(input)} disabled={busy || input.trim().length < 3}>
-          {busy ? "…" : "[ preguntar ]"}
+          {busy ? "…" : tr("[ preguntar ]", "[ ask ]")}
         </button>
       </div>
     </section>

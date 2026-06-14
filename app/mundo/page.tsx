@@ -12,6 +12,7 @@ import { EASE, GrowBar } from "@/components/motion";
 import type { FailureCluster } from "@/components/World3D";
 import { TOTAL_COMPANIES, cityOfCompany, clusterOf } from "@/components/World3D";
 import type { PreMortemReport } from "@/lib/types";
+import { useLang } from "@/lib/i18n";
 import failures from "@/lib/memory/external_failures.json";
 
 // WebGL solo en cliente: el canvas se carga bajo demanda, nunca en SSR.
@@ -32,6 +33,8 @@ interface ExternalFailureRaw {
 }
 
 export default function MundoPage() {
+  const [lang] = useLang();
+  const tr = (es: string, en: string) => (lang === "en" ? en : es);
   const [selected, setSelected] = useState<FailureCluster | null>(null);
   const [company, setCompany] = useState<string | null>(null);
   // el PRE-MORTEM ACTUAL: el último informe persistido del historial
@@ -91,52 +94,53 @@ export default function MundoPage() {
         </div>
         <div className="sys-right">
           <Link href="/" className="syslink">
-            &lt;&lt; volver
+            &lt;&lt; {tr("volver", "back")}
           </Link>
-          <span>rev 1.1</span>
+          <span>rev 1.4</span>
         </div>
       </div>
 
       <div className="statusline">
-        <span className="ok">&gt; el mundo de los fracasos</span> · {TOTAL_COMPANIES} empresas reales
-        en sus sedes reales · toca una luz ámbar
+        <span className="ok">&gt; {tr("el mundo de los fracasos", "the world of failures")}</span> ·{" "}
+        {TOTAL_COMPANIES} {tr("empresas reales en sus sedes reales · toca una luz ámbar", "real companies at their real HQs · tap an amber light")}
       </div>
 
       <section className="section" style={{ paddingBottom: 10 }}>
-        <div className="kicker">// memoria externa · fracasos con coordenadas</div>
+        <div className="kicker">{tr("// memoria externa · fracasos con coordenadas", "// external memory · failures with coordinates")}</div>
         <h1 className="manifesto" style={{ fontSize: "clamp(28px, 5vw, 52px)" }}>
-          Ya lo intentaron.
+          {tr("Ya lo intentaron.", "They already tried it.")}
           <br />
-          <span className="dim">En todo el planeta.</span>
+          <span className="dim">{tr("En todo el planeta.", "All over the planet.")}</span>
         </h1>
         <p className="lede prose">
-          Cada luz ámbar es la sede de una empresa real que murió por un patrón que este agente
-          detecta. Gira el planeta, toca una luz y abre el expediente.
+          {tr(
+            "Cada luz ámbar es la sede de una empresa real que murió por un patrón que este agente detecta. Gira el planeta, toca una luz y abre el expediente.",
+            "Each amber light is the HQ of a real company that died from a pattern this agent detects. Spin the planet, tap a light, open the case file."
+          )}
         </p>
       </section>
 
       <div className="world-wrap">
         <World3D selected={selected} highlightCompanies={matched} onSelect={selectCluster} />
-        <div className="world-legend" aria-label="Leyenda del globo">
+        <div className="world-legend" aria-label="Globe legend">
           <div className="wl-row">
-            <span className="wl-dot wl-amber" /> archivo completo — siempre encendido: la historia
-            no cambia
+            <span className="wl-dot wl-amber" /> {tr("archivo completo — siempre encendido: la historia no cambia", "full archive — always on: history doesn't change")}
           </div>
           <div className="wl-row">
-            <span className="wl-dot wl-red" /> tu análisis actual — cambia con cada pre-mortem
+            <span className="wl-dot wl-red" /> {tr("tu análisis actual — cambia con cada pre-mortem", "your current analysis — changes with each pre-mortem")}
           </div>
           <div className="wl-row">
-            <span className="wl-dot wl-gold" /> zona seleccionada
+            <span className="wl-dot wl-gold" /> {tr("zona seleccionada", "selected zone")}
           </div>
-          <div className="wl-row wl-hint">tamaño del punto = empresas muertas en la zona</div>
+          <div className="wl-row wl-hint">{tr("tamaño del punto = empresas muertas en la zona", "dot size = companies that died in the zone")}</div>
         </div>
       </div>
 
       {selected && (
         <section className="section" style={{ paddingBottom: info ? 0 : undefined }}>
           <div className="field-head">
-            <span>// zona: {selected.area}</span>
-            <span>{selected.companies.length} empresas murieron aquí</span>
+            <span>{tr("// zona:", "// zone:")} {selected.area}</span>
+            <span>{selected.companies.length} {tr("empresas murieron aquí", "companies died here")}</span>
           </div>
           <div className="presets" style={{ marginTop: 10 }}>
             {selected.companies.map((e) => (
@@ -171,19 +175,19 @@ export default function MundoPage() {
             </div>
             <div className="ext-idea prose">{info.idea}</div>
             <div className="field">
-              <div className="label">// por qué murió</div>
+              <div className="label">{tr("// por qué murió", "// why it died")}</div>
               <div className="val prose">{info.whyFailed}</div>
             </div>
             <div className="field">
-              <div className="label">// la lección que este agente recuerda</div>
+              <div className="label">{tr("// la lección que este agente recuerda", "// the lesson this agent remembers")}</div>
               <div className="val prose">{info.lesson}</div>
             </div>
             <div className="ext-foot">
               {info.funding && info.funding !== "—" && (
-                <span className="tag">capital quemado {info.funding}</span>
+                <span className="tag">{tr("capital quemado", "capital burned")} {info.funding}</span>
               )}
               <a className="cmd" href={info.source} target="_blank" rel="noreferrer">
-                &gt;&gt; fuente
+                &gt;&gt; {tr("fuente", "source")}
               </a>
             </div>
           </div>
@@ -193,10 +197,10 @@ export default function MundoPage() {
       {latest ? (
         <section className="section world-cta">
           <div className="field-head">
-            <span>// pre-mortem actual · el último análisis corriendo en el sistema</span>
+            <span>{tr("// pre-mortem actual · el último análisis corriendo en el sistema", "// current pre-mortem · the latest analysis running in the system")}</span>
             {latest.id && (
               <Link className="syslink" href={`/informe/${latest.id}`}>
-                abrir informe ↗
+                {tr("abrir informe", "open report")} ↗
               </Link>
             )}
           </div>
@@ -217,9 +221,10 @@ export default function MundoPage() {
           {matched.length > 0 && (
             <>
               <p className="lede prose" style={{ marginTop: 16 }}>
-                Este análisis encontró <b>{matched.length} fracasos reales parecidos</b> — laten en{" "}
-                <b style={{ color: "var(--red)" }}>rojo</b> sobre el planeta, en su ubicación exacta.
-                Tócalos aquí:
+                {tr("Este análisis encontró", "This analysis found")}{" "}
+                <b>{matched.length} {tr("fracasos reales parecidos", "similar real failures")}</b> —{" "}
+                {tr("laten en", "pulsing in")} <b style={{ color: "var(--red)" }}>{tr("rojo", "red")}</b>{" "}
+                {tr("sobre el planeta, en su ubicación exacta. Tócalos aquí:", "on the planet, at their exact location. Tap them here:")}
               </p>
               <div className="presets" style={{ marginTop: 8 }}>
                 {matched.map((name) => (
@@ -237,23 +242,28 @@ export default function MundoPage() {
         </section>
       ) : (
         <section className="section world-cta">
-          <div className="kicker">// tu turno</div>
-          <h2 className="world-cta-title">¿Tu proyecto repetirá la historia?</h2>
+          <div className="kicker">{tr("// tu turno", "// your turn")}</div>
+          <h2 className="world-cta-title">{tr("¿Tu proyecto repetirá la historia?", "Will your project repeat history?")}</h2>
           <p className="lede prose">
-            Aún no hay pre-mortems en el historial. Describe lo que vas a construir y el agente lo
-            contrasta contra esta memoria — antes de que tu sede sea otra luz ámbar.
+            {tr(
+              "Aún no hay pre-mortems en el historial. Describe lo que vas a construir y el agente lo contrasta contra esta memoria — antes de que tu sede sea otra luz ámbar.",
+              "No pre-mortems in the history yet. Describe what you're about to build and the agent checks it against this memory — before your HQ becomes another amber light."
+            )}
           </p>
           <div className="controls">
             <Link href="/">
-              <button className="primary">[ ejecutar pre-mortem ]</button>
+              <button className="primary">{tr("[ ejecutar pre-mortem ]", "[ run pre-mortem ]")}</button>
             </Link>
           </div>
         </section>
       )}
 
       <div className="footer">
-        Globo construido con las texturas 3D del proyecto (albedo, relieve, nubes, luces
-        nocturnas). <b>MICROSOFT AGENTS LEAGUE</b> · TRACK REASONING AGENTS.
+        {tr(
+          "Globo construido con las texturas 3D del proyecto (albedo, relieve, nubes, luces nocturnas).",
+          "Globe built with the project's own 3D textures (albedo, relief, clouds, night lights)."
+        )}{" "}
+        <b>MICROSOFT AGENTS LEAGUE</b> · TRACK REASONING AGENTS.
       </div>
     </div>
   );
