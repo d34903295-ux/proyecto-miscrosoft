@@ -3,6 +3,8 @@
 Spec de marca para el video del hackathon (Microsoft Agents League · Reasoning
 Agents). Misma identidad "Terminal Forense" que la app.
 
+> 🎬 Video publicado: https://youtu.be/XyVPeMP0FBs
+
 ## Colors
 
 | token     | hex     | uso                                  |

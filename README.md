@@ -4,7 +4,7 @@
 
 A reasoning agent for the **Microsoft Agents League** · **Reasoning Agents** track.
 
-**🌐 [Live demo](https://fullpremortem.vercel.app/) · 🎥 Video: `add your YouTube link` · 📖 [How it works (deep dive)](./COMO-FUNCIONA.md)**
+**🌐 [Live demo](https://fullpremortem.vercel.app/) · 🎥 [Video demo](https://youtu.be/XyVPeMP0FBs) · 📖 [How it works (deep dive)](./COMO-FUNCIONA.md)**
 
 Before you launch a project, this agent searches your company's institutional memory
 for similar **past projects that failed**, and derives how _yours_ is likely to fail —
