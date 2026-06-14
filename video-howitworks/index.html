@@ -77,6 +77,22 @@
       .tstep .tn { color: var(--amber); }
       .tstep .tms { margin-left: auto; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
       .tdot { width: 11px; height: 11px; background: var(--amber); flex: none; box-shadow: 0 0 16px rgba(242,176,30,0.6); }
+      /* grafo de recuperación (SVG) */
+      .gnode { transform-box: fill-box; transform-origin: center; }
+      .gnode rect { fill: var(--bg-panel); stroke: var(--line); stroke-width: 1.5; }
+      .gnode.hot rect { stroke: var(--amber); }
+      .gnode text { fill: var(--ink); font-family: "JetBrains Mono", ui-monospace, monospace; }
+      .gnode .pct { fill: var(--amber); }
+      .edge { stroke: var(--amber); stroke-width: 2; opacity: 0.5; }
+      /* matriz de riesgo (scatter) */
+      .mx-axis { stroke: var(--line); stroke-width: 1.5; }
+      .mx-grid { stroke: var(--line); stroke-width: 1; opacity: 0.35; }
+      .mx-quad { fill: rgba(224,87,78,0.09); }
+      .mx-lbl { fill: var(--ink-dim); font-size: 21px; font-family: "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.1em; }
+      .mx-actnow { fill: var(--red); font-size: 21px; font-family: "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.14em; }
+      .mx-dot { transform-box: fill-box; transform-origin: center; }
+      .mx-dot circle { fill: var(--amber); }
+      .mx-dot.red circle { fill: var(--red); filter: drop-shadow(0 0 10px rgba(224,87,78,0.6)); }
       /* dust ambiental (encima, muy sutil) */
       #dust { position: absolute; inset: 0; z-index: 80; pointer-events: none; }
       #dust .dot { position: absolute; background: var(--amber); border-radius: 50%; opacity: 0.16; }
@@ -126,11 +142,15 @@
           <div class="kicker" id="s2-k">// step two · the heart of "it remembers"</div>
           <div class="steplabel"><div class="stepnum" id="s2-n">02</div><div class="stepname" id="s2-name">Retrieve</div></div>
           <div class="sub" id="s2-s">Not keywords — <b>embeddings</b> that measure meaning, plus four business dimensions.</div>
-          <div class="rows" id="s2-rows">
-            <div class="row" id="s2-r1">Cygnus — telemedicine <span class="pct">91%</span></div>
-            <div class="row" id="s2-r2">Phoenix — AI model in prod <span class="pct">84%</span></div>
-            <div class="row" id="s2-r3">Scutum — access control <span class="pct">76%</span></div>
-          </div>
+          <svg id="s2-net" viewBox="0 0 1480 430" style="width:100%;max-width:1480px;overflow:visible">
+            <line class="edge" id="s2-e1" x1="340" y1="215" x2="1080" y2="86" stroke-dasharray="1500" stroke-dashoffset="1500"/>
+            <line class="edge" id="s2-e2" x1="340" y1="215" x2="1080" y2="215" stroke-dasharray="1500" stroke-dashoffset="1500"/>
+            <line class="edge" id="s2-e3" x1="340" y1="215" x2="1080" y2="344" stroke-dasharray="1500" stroke-dashoffset="1500"/>
+            <g class="gnode hot" id="s2-c"><rect x="40" y="165" width="300" height="100"/><text x="190" y="222" text-anchor="middle" font-size="27" font-weight="700">YOUR PROJECT</text></g>
+            <g class="gnode" id="s2-k1"><rect x="1080" y="40" width="360" height="92"/><text x="1106" y="94" font-size="27">Cygnus</text><text class="pct" x="1414" y="94" text-anchor="end" font-size="29">91%</text></g>
+            <g class="gnode" id="s2-k2"><rect x="1080" y="169" width="360" height="92"/><text x="1106" y="223" font-size="27">Phoenix</text><text class="pct" x="1414" y="223" text-anchor="end" font-size="29">84%</text></g>
+            <g class="gnode" id="s2-k3"><rect x="1080" y="298" width="360" height="92"/><text x="1106" y="352" font-size="27">Scutum</text><text class="pct" x="1414" y="352" text-anchor="end" font-size="29">76%</text></g>
+          </svg>
         </div>
       </div>
 
@@ -182,11 +202,23 @@
         <div class="sc">
           <div class="kicker" id="s6-k">// step six</div>
           <div class="steplabel"><div class="stepnum" id="s6-n">06</div><div class="stepname" id="s6-name">Rank</div></div>
-          <div class="chips" id="s6-chips">
-            <span class="chip hot" id="s6-a">relevance</span>
-            <span class="chip hot" id="s6-b">× calibrated confidence</span>
-            <span class="chip hot" id="s6-d">× historical severity</span>
-          </div>
+          <div class="sub" id="s6-s">relevance × calibrated confidence × historical severity</div>
+          <svg id="s6-mx" viewBox="0 0 1480 460" style="width:100%;max-width:1480px;overflow:visible">
+            <rect class="mx-quad" id="s6-q" x="780" y="0" width="700" height="210"/>
+            <line class="mx-grid" x1="780" y1="0" x2="780" y2="410"/>
+            <line class="mx-grid" x1="90" y1="210" x2="1480" y2="210"/>
+            <line class="mx-axis" id="s6-ay" x1="90" y1="0" x2="90" y2="410"/>
+            <line class="mx-axis" id="s6-ax" x1="90" y1="410" x2="1480" y2="410"/>
+            <text class="mx-lbl" x="104" y="26">SEVERITY ↑</text>
+            <text class="mx-lbl" x="1470" y="448" text-anchor="end">CONFIDENCE →</text>
+            <text class="mx-actnow" x="1466" y="38" text-anchor="end">ACT NOW</text>
+            <g class="mx-dot red" id="s6-d1"><circle cx="1180" cy="70" r="16"/></g>
+            <g class="mx-dot red" id="s6-d2"><circle cx="980" cy="120" r="14"/></g>
+            <g class="mx-dot" id="s6-d3"><circle cx="1250" cy="170" r="12"/></g>
+            <g class="mx-dot" id="s6-d4"><circle cx="600" cy="150" r="11"/></g>
+            <g class="mx-dot" id="s6-d5"><circle cx="840" cy="300" r="11"/></g>
+            <g class="mx-dot" id="s6-d6"><circle cx="420" cy="330" r="10"/></g>
+          </svg>
         </div>
       </div>
 
@@ -307,9 +339,13 @@
         tl.from("#s2-n", { y: 50, opacity: 0, duration: 0.6, ease: "back.out(1.4)" }, 22.0);
         tl.from("#s2-name", { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 22.2);
         tl.from("#s2-s", { y: 30, opacity: 0, duration: 0.6, ease: "power2.out" }, 22.6);
-        tl.from("#s2-r1", { x: -40, opacity: 0, duration: 0.5, ease: "power3.out" }, 23.2);
-        tl.from("#s2-r2", { x: -40, opacity: 0, duration: 0.5, ease: "power3.out" }, 23.4);
-        tl.from("#s2-r3", { x: -40, opacity: 0, duration: 0.5, ease: "power3.out" }, 23.6);
+        tl.from("#s2-c", { scale: 0.6, opacity: 0, duration: 0.5, ease: "back.out(1.6)" }, 23.1);
+        tl.to("#s2-e1", { strokeDashoffset: 0, duration: 0.6, ease: "power2.inOut" }, 23.5);
+        tl.to("#s2-e2", { strokeDashoffset: 0, duration: 0.6, ease: "power2.inOut" }, 23.7);
+        tl.to("#s2-e3", { strokeDashoffset: 0, duration: 0.6, ease: "power2.inOut" }, 23.9);
+        tl.from("#s2-k1", { scale: 0.6, opacity: 0, duration: 0.45, ease: "back.out(1.7)" }, 23.95);
+        tl.from("#s2-k2", { scale: 0.6, opacity: 0, duration: 0.45, ease: "back.out(1.7)" }, 24.15);
+        tl.from("#s2-k3", { scale: 0.6, opacity: 0, duration: 0.45, ease: "back.out(1.7)" }, 24.35);
 
         // ── S3 deduplicate
         enter("#s3", "#s3 .sc", 35.4);
@@ -344,9 +380,15 @@
         tl.from("#s6-k", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 75.8);
         tl.from("#s6-n", { y: 50, opacity: 0, duration: 0.6, ease: "back.out(1.4)" }, 76.0);
         tl.from("#s6-name", { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 76.2);
-        tl.from("#s6-a", { y: 34, opacity: 0, duration: 0.5, ease: "power3.out" }, 76.9);
-        tl.from("#s6-b", { y: 34, opacity: 0, duration: 0.5, ease: "expo.out" }, 77.1);
-        tl.from("#s6-d", { y: 34, opacity: 0, duration: 0.5, ease: "back.out(1.4)" }, 77.3);
+        tl.from("#s6-s", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 76.6);
+        tl.from(["#s6-ay", "#s6-ax"], { opacity: 0, duration: 0.5, ease: "power2.out" }, 76.9);
+        tl.from("#s6-q", { opacity: 0, duration: 0.6, ease: "power2.out" }, 77.2);
+        tl.from("#s6-d1", { scale: 0, opacity: 0, duration: 0.4, ease: "back.out(2.2)" }, 77.5);
+        tl.from("#s6-d2", { scale: 0, opacity: 0, duration: 0.4, ease: "back.out(2.2)" }, 77.65);
+        tl.from("#s6-d3", { scale: 0, opacity: 0, duration: 0.4, ease: "back.out(2.2)" }, 77.8);
+        tl.from("#s6-d4", { scale: 0, opacity: 0, duration: 0.4, ease: "back.out(2.2)" }, 77.95);
+        tl.from("#s6-d5", { scale: 0, opacity: 0, duration: 0.4, ease: "back.out(2.2)" }, 78.1);
+        tl.from("#s6-d6", { scale: 0, opacity: 0, duration: 0.4, ease: "back.out(2.2)" }, 78.25);
 
         // ── S7 self-assess
         enter("#s7", "#s7 .sc", 86.4);
