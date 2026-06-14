@@ -2332,3 +2332,11 @@ button.primary:hover:not(:disabled)::after {
   background: var(--amber);
   box-shadow: 0 0 0 3px var(--bg);
 }
+
+/* etiqueta: expediente interno anonimizado (claridad para jueces) */
+.ex-internal {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+  margin: 4px 0 10px;
+}

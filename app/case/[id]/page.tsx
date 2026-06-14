@@ -29,11 +29,16 @@ export default function CasePage({ params }: { params: { id: string } }) {
 
       <section className="section">
         <div style={{ marginBottom: 16 }}>
-          <span className="stamp">Expediente · {record.id}</span>
+          <span className="stamp">Expediente interno · {record.id}</span>
         </div>
         <h1 className="manifesto" style={{ fontSize: "clamp(26px, 4.5vw, 40px)" }}>
           {record.name}
         </h1>
+        <p className="lede prose" style={{ marginTop: 12, maxWidth: "70ch" }}>
+          <b>Caso interno anonimizado</b> de la memoria de la empresa — «{record.name.split("—")[0].trim()}»
+          es un <b>nombre en clave</b>, no una empresa pública. (Los fracasos públicos reales y con
+          fuente verificable están en <a className="cmd" href="/mundo">// mundo 3d</a>.)
+        </p>
         <div className="tags" style={{ marginTop: 14 }}>
           <span className="tag">
             <b>año</b> {record.year}

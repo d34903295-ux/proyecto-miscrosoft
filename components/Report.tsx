@@ -126,6 +126,7 @@ const UI: Record<string, string> = {
   "← antes del contraanálisis": "← before counter-analysis",
   evidencia: "evidence",
   "[ + detalle ]": "[ + detail ]",
+  "// expediente interno anonimizado · nombre en clave": "// anonymized internal case file · codename",
   "// modo de fallo": "// failure mode",
   "// por qué aplica aquí": "// why it applies here",
   "// señales tempranas a vigilar": "// early warning signals",
@@ -983,6 +984,7 @@ function RiskRecord({
               {risk.evidence.caseId} · rel {(risk.evidence.retrievalScore * 100).toFixed(0)}%
             </span>
           </div>
+          <div className="ex-internal">{tr("// expediente interno anonimizado · nombre en clave")}</div>
           {risk.evidence.matchedDimensions.length > 0 && (
             <div className="tags" style={{ marginBottom: 10 }}>
               {risk.evidence.matchedDimensions.map((d, i) => (
