@@ -66,7 +66,8 @@ export function simulate(risks: DerivedRisk[], horizonQuarters = 40): Simulation
 
   const SD = 2.2; // amplitud temporal del golpe (trimestres)
   const HSCALE = 0.16; // calibra la pendiente de la caída
-  const MIT = 0.4; // mitigar reduce el hazard al 40%
+  const MIT_ALL = 0.4; // mitigar TODO reduce el hazard al 40%
+  const MIT_HALF = 0.7; // mitigar la MITAD lo reduce al 70%
 
   // hazard del trimestre t = suma de núcleos gaussianos centrados en cada evento.
   const hazardAt = (t: number, factor: number): number => {
@@ -80,16 +81,20 @@ export function simulate(risks: DerivedRisk[], horizonQuarters = 40): Simulation
 
   const points: SimPoint[] = [];
   let sIgnore = 1; // supervivencia ignorando señales
-  let sMit = 1; // supervivencia mitigando
+  let sHalf = 1; // supervivencia mitigando la mitad
+  let sMit = 1; // supervivencia mitigando todo
   for (let t = 0; t <= horizonQuarters; t++) {
     if (t > 0) {
       sIgnore *= 1 - hazardAt(t, 1);
-      sMit *= 1 - hazardAt(t, MIT);
+      sHalf *= 1 - hazardAt(t, MIT_HALF);
+      sMit *= 1 - hazardAt(t, MIT_ALL);
     }
     const L = traction(t);
     points.push({
       q: t,
       survival: Number(sIgnore.toFixed(4)),
+      survivalHalf: Number(sHalf.toFixed(4)),
+      survivalAll: Number(sMit.toFixed(4)),
       ignore: Number((L * sIgnore).toFixed(2)),
       mitigate: Number((L * sMit).toFixed(2)),
     });
@@ -98,6 +103,11 @@ export function simulate(risks: DerivedRisk[], horizonQuarters = 40): Simulation
   const at = (q: number): SimPoint => points[Math.min(q, points.length - 1)];
   const survival5y = at(20).survival;
   const survival10y = at(horizonQuarters).survival;
+  const scenarios = {
+    ignore: survival5y,
+    half: at(20).survivalHalf ?? survival5y,
+    all: at(20).survivalAll ?? survival5y,
+  };
 
   const deadliest = events.length
     ? events.reduce((a, b) => (b.impact > a.impact ? b : a))
@@ -105,9 +115,11 @@ export function simulate(risks: DerivedRisk[], horizonQuarters = 40): Simulation
 
   const pct = (x: number) => Math.round(x * 100);
   const summary = deadliest
-    ? `Si lo haces de todos modos e ignoras las señales, la probabilidad de seguir vivo a 5 años es ~${pct(
-        survival5y
-      )}%. El punto de mayor peligro llega en ${deadliest.whenLabel}: ${deadliest.failureCategory.toLowerCase()}, como le pasó a «${deadliest.caseName}». Aplicar las mitigaciones cambia la trayectoria.`
+    ? `Probabilidad de seguir vivo a 5 años: si mitigas TODO, ~${pct(scenarios.all)}%; si mitigas la mitad, ~${pct(
+        scenarios.half
+      )}%; si ignoras las señales, ~${pct(survival5y)}%. El golpe más letal llega en ${deadliest.whenLabel}: ${deadliest.failureCategory.toLowerCase()}, como le pasó a «${deadliest.caseName}». La diferencia entre ${pct(
+        scenarios.all
+      )}% y ${pct(survival5y)}% es lo que está en tus manos.`
     : "No hay riesgos suficientes para proyectar una trayectoria.";
 
   return {
@@ -116,6 +128,7 @@ export function simulate(risks: DerivedRisk[], horizonQuarters = 40): Simulation
     events,
     survival5y,
     survival10y,
+    scenarios,
     deadliest,
     summary,
   };

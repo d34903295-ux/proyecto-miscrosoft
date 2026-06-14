@@ -72,7 +72,10 @@ function EventMarkers({ events, horizon }: { events: SimEvent[]; horizon: number
 
 function SurvivalChart({ sim }: { sim: Simulation }) {
   const { points, horizon } = { points: sim.points, horizon: sim.horizonQuarters };
-  const line = points.map((p) => `${xOf(p.q, horizon).toFixed(1)},${yOf01(p.survival).toFixed(1)}`).join(" ");
+  const poly = (key: "survival" | "survivalHalf" | "survivalAll") =>
+    points
+      .map((p) => `${xOf(p.q, horizon).toFixed(1)},${yOf01((p[key] ?? p.survival) as number).toFixed(1)}`)
+      .join(" ");
   const area =
     `M ${xOf(0, horizon).toFixed(1)},${(PAD.t + plotH).toFixed(1)} ` +
     points.map((p) => `L ${xOf(p.q, horizon).toFixed(1)},${yOf01(p.survival).toFixed(1)}`).join(" ") +
@@ -80,7 +83,7 @@ function SurvivalChart({ sim }: { sim: Simulation }) {
   const ticks = [0, 0.5, 1];
 
   return (
-    <svg className="chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Curva de supervivencia proyectada">
+    <svg className="chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Curvas de supervivencia: mitigar todo / la mitad / ignorar">
       {ticks.map((tk) => (
         <g key={tk}>
           <line x1={PAD.l} y1={yOf01(tk)} x2={W - PAD.r} y2={yOf01(tk)} className="ax-grid" />
@@ -98,12 +101,14 @@ function SurvivalChart({ sim }: { sim: Simulation }) {
         viewport={{ once: true, margin: "-60px 0px" }}
         transition={{ duration: 1.2, delay: 0.7, ease: EASE }}
       />
-      <motion.polyline points={line} className="surv-line" fill="none" {...drawIn()} />
-      {/* marca a 5 años */}
+      {/* tres escenarios */}
+      <motion.polyline points={poly("survivalAll")} className="surv-all" fill="none" {...drawIn(0.3)} />
+      <motion.polyline points={poly("survivalHalf")} className="surv-half" fill="none" {...drawIn(0.15)} />
+      <motion.polyline points={poly("survival")} className="surv-line" fill="none" {...drawIn(0)} />
       <g>
         <circle cx={xOf(20, horizon)} cy={yOf01(sim.survival5y)} r={3.5} className="dot-amber" />
         <text x={xOf(20, horizon) + 6} y={yOf01(sim.survival5y) - 6} className="ax-annot">
-          5 años: {Math.round(sim.survival5y * 100)}%
+          5 años
         </text>
       </g>
       <EventMarkers events={sim.events} horizon={horizon} />
@@ -140,28 +145,33 @@ export default function SimViz({ simulation }: { simulation: Simulation }) {
     <div className="sim">
       <p className="sim-summary prose">{sim.summary}</p>
 
-      <div className="sim-kpis">
-        <div className="kpi">
-          <div className="kpi-num">
-            <AnimatedNumber value={Math.round(sim.survival5y * 100)} />%
+      {(() => {
+        const sc = sim.scenarios ?? { all: sim.survival5y, half: sim.survival5y, ignore: sim.survival5y };
+        return (
+          <div className="sim-scenarios">
+            <div className="scn scn-all">
+              <div className="scn-num"><AnimatedNumber value={Math.round(sc.all * 100)} />%</div>
+              <div className="scn-lbl">mitigas <b>todo</b></div>
+            </div>
+            <div className="scn-arrow">→</div>
+            <div className="scn scn-half">
+              <div className="scn-num"><AnimatedNumber value={Math.round(sc.half * 100)} />%</div>
+              <div className="scn-lbl">mitigas <b>la mitad</b></div>
+            </div>
+            <div className="scn-arrow">→</div>
+            <div className="scn scn-ign">
+              <div className="scn-num"><AnimatedNumber value={Math.round(sc.ignore * 100)} />%</div>
+              <div className="scn-lbl">ignoras <b>todo</b></div>
+            </div>
           </div>
-          <div className="kpi-lbl">prob. vivo · 5 años</div>
-        </div>
-        <div className="kpi">
-          <div className="kpi-num">
-            <AnimatedNumber value={Math.round(sim.survival10y * 100)} />%
-          </div>
-          <div className="kpi-lbl">prob. vivo · 10 años</div>
-        </div>
-        {sim.deadliest && (
-          <div className="kpi">
-            <div className="kpi-num kpi-sm">{sim.deadliest.whenLabel}</div>
-            <div className="kpi-lbl">mayor peligro</div>
-          </div>
-        )}
-      </div>
+        );
+      })()}
+      <div className="scn-foot">prob. de seguir vivo a 5 años · cada escenario sale de los mismos riesgos reales</div>
 
-      <div className="chart-title">curva de supervivencia — si ignoras las señales</div>
+      <div className="chart-title" style={{ marginTop: 16 }}>
+        curva de supervivencia — <span className="lg-all">mitigar todo</span> ·{" "}
+        <span className="lg-half">la mitad</span> · <span className="lg-ign">ignorar</span>
+      </div>
       <SurvivalChart sim={sim} />
 
       <div className="chart-title" style={{ marginTop: 18 }}>

@@ -167,6 +167,8 @@ export interface Verdict {
 export interface SimPoint {
   q: number; // índice de trimestre 0..N
   survival: number; // 0..1 — prob. de seguir vivo si IGNORAS las señales
+  survivalHalf?: number; // 0..1 — supervivencia si mitigas la MITAD
+  survivalAll?: number; // 0..1 — supervivencia si mitigas TODO
   ignore: number; // 0..100 — salud/tracción proyectada ignorando señales
   mitigate: number; // 0..100 — salud/tracción si aplicas las mitigaciones
 }
@@ -189,8 +191,10 @@ export interface Simulation {
   horizonQuarters: number;
   points: SimPoint[];
   events: SimEvent[];
-  survival5y: number; // 0..1
+  survival5y: number; // 0..1 (escenario IGNORAR — compat)
   survival10y: number; // 0..1
+  /** Supervivencia a 5 años en los tres escenarios (0..1). */
+  scenarios?: { ignore: number; half: number; all: number };
   deadliest: SimEvent | null;
   summary: string; // titular grounded
 }

@@ -1138,9 +1138,21 @@ mark {
 }
 .surv-line {
   fill: none;
+  stroke: var(--red);
+  stroke-width: 2;
+}
+.surv-half {
+  fill: none;
   stroke: var(--amber);
   stroke-width: 2;
 }
+.surv-all {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 2;
+}
+.lg-all { color: var(--green); }
+.lg-half { color: var(--amber); }
 .dot-amber {
   fill: var(--amber);
 }
@@ -2331,4 +2343,64 @@ button.primary:hover:not(:disabled)::after {
   border-radius: 50%;
   background: var(--amber);
   box-shadow: 0 0 0 3px var(--bg);
+}
+
+/* etiqueta: expediente interno anonimizado (claridad para jueces) */
+.ex-internal {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+  margin: 4px 0 10px;
+}
+
+/* simulación · tres escenarios (mitigar todo / la mitad / ignorar) */
+.sim-scenarios {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin: 16px 0 6px;
+  flex-wrap: wrap;
+}
+.scn {
+  flex: 1 1 0;
+  min-width: 120px;
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+  padding: 16px 18px;
+  border-left-width: 3px;
+}
+.scn-all { border-left-color: var(--green); }
+.scn-half { border-left-color: var(--amber); }
+.scn-ign { border-left-color: var(--red); }
+.scn-num {
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.scn-all .scn-num { color: var(--green); }
+.scn-half .scn-num { color: var(--amber); }
+.scn-ign .scn-num { color: var(--red); }
+.scn-lbl {
+  margin-top: 8px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.scn-lbl b { color: var(--ink-2); }
+.scn-arrow {
+  align-self: center;
+  color: var(--ink-dim);
+  font-size: 22px;
+}
+.scn-foot {
+  font-size: 11px;
+  color: var(--ink-dim);
+  letter-spacing: 0.04em;
+}
+@media (max-width: 560px) {
+  .scn-arrow { display: none; }
+  .scn { min-width: 30%; }
+  .scn-num { font-size: 38px; }
 }

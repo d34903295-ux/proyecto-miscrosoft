@@ -41,3 +41,5 @@ tsconfig.tsbuildinfo
 
 # datos runtime (historial de informes, casos custom)
 /data
+/.localbin
+video-howitworks/*.mp4
