@@ -10,6 +10,8 @@ Hecho para **Microsoft Agents League** · Track **Reasoning Agents**.
 
 > 📖 ¿Cómo funciona, paso a paso? → **[`COMO-FUNCIONA.md`](./COMO-FUNCIONA.md)** (explicación para jueces).
 
+> 🎬 **Video demo:** **https://youtu.be/XyVPeMP0FBs**
+
 > **TL;DR (English):** Before launching a project, this reasoning agent searches
 > your company's institutional memory for similar past projects, extracts what
 > went wrong, and produces a pre-mortem report — every risk anchored to a real,
