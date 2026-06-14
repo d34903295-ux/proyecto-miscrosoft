@@ -7,6 +7,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Simulation, SimEvent, SimPoint } from "@/lib/types";
 import { AnimatedNumber, EASE, Reveal } from "@/components/motion";
+import { tlabel } from "@/lib/labels";
 
 /** Línea que se dibuja sola al entrar en pantalla (efecto plotter). */
 const drawIn = (delay = 0) => ({
@@ -32,7 +33,7 @@ function yOf100(v: number): number {
   return PAD.t + (1 - v / 100) * plotH;
 }
 
-function YearTicks({ horizon }: { horizon: number }) {
+function YearTicks({ horizon, lang = "es" }: { horizon: number; lang?: "es" | "en" }) {
   const years = [2, 4, 6, 8, 10];
   return (
     <>
@@ -42,7 +43,7 @@ function YearTicks({ horizon }: { horizon: number }) {
           <g key={y}>
             <line x1={x} y1={PAD.t} x2={x} y2={PAD.t + plotH} className="ax-grid" />
             <text x={x} y={H - 10} className="ax-label" textAnchor="middle">
-              Año {y}
+              {lang === "en" ? "Year" : "Año"} {y}
             </text>
           </g>
         );
@@ -70,7 +71,7 @@ function EventMarkers({ events, horizon }: { events: SimEvent[]; horizon: number
   );
 }
 
-function SurvivalChart({ sim }: { sim: Simulation }) {
+function SurvivalChart({ sim, lang = "es" }: { sim: Simulation; lang?: "es" | "en" }) {
   const { points, horizon } = { points: sim.points, horizon: sim.horizonQuarters };
   const poly = (key: "survival" | "survivalHalf" | "survivalAll") =>
     points
@@ -92,7 +93,7 @@ function SurvivalChart({ sim }: { sim: Simulation }) {
           </text>
         </g>
       ))}
-      <YearTicks horizon={horizon} />
+      <YearTicks horizon={horizon} lang={lang} />
       <motion.path
         d={area}
         className="surv-area"
@@ -108,7 +109,7 @@ function SurvivalChart({ sim }: { sim: Simulation }) {
       <g>
         <circle cx={xOf(20, horizon)} cy={yOf01(sim.survival5y)} r={3.5} className="dot-amber" />
         <text x={xOf(20, horizon) + 6} y={yOf01(sim.survival5y) - 6} className="ax-annot">
-          5 años
+          {lang === "en" ? "5y" : "5 años"}
         </text>
       </g>
       <EventMarkers events={sim.events} horizon={horizon} />
@@ -116,7 +117,7 @@ function SurvivalChart({ sim }: { sim: Simulation }) {
   );
 }
 
-function TrajectoryChart({ sim }: { sim: Simulation }) {
+function TrajectoryChart({ sim, lang = "es" }: { sim: Simulation; lang?: "es" | "en" }) {
   const { points, horizonQuarters: horizon } = sim;
   const mk = (key: "ignore" | "mitigate") =>
     points.map((p: SimPoint) => `${xOf(p.q, horizon).toFixed(1)},${yOf100(p[key]).toFixed(1)}`).join(" ");
@@ -131,7 +132,7 @@ function TrajectoryChart({ sim }: { sim: Simulation }) {
           </text>
         </g>
       ))}
-      <YearTicks horizon={horizon} />
+      <YearTicks horizon={horizon} lang={lang} />
       <motion.polyline points={mk("mitigate")} className="traj-mit" fill="none" {...drawIn(0.25)} />
       <motion.polyline points={mk("ignore")} className="traj-ign" fill="none" {...drawIn(0)} />
       <EventMarkers events={sim.events} horizon={horizon} />
@@ -139,8 +140,9 @@ function TrajectoryChart({ sim }: { sim: Simulation }) {
   );
 }
 
-export default function SimViz({ simulation }: { simulation: Simulation }) {
+export default function SimViz({ simulation, lang = "es" }: { simulation: Simulation; lang?: "es" | "en" }) {
   const sim = simulation;
+  const tr = (es: string, en: string) => (lang === "en" ? en : es);
   return (
     <div className="sim">
       <p className="sim-summary prose">{sim.summary}</p>
@@ -151,34 +153,39 @@ export default function SimViz({ simulation }: { simulation: Simulation }) {
           <div className="sim-scenarios">
             <div className="scn scn-all">
               <div className="scn-num"><AnimatedNumber value={Math.round(sc.all * 100)} />%</div>
-              <div className="scn-lbl">mitigas <b>todo</b></div>
+              <div className="scn-lbl">{tr("mitigas", "you mitigate")} <b>{tr("todo", "everything")}</b></div>
             </div>
             <div className="scn-arrow">→</div>
             <div className="scn scn-half">
               <div className="scn-num"><AnimatedNumber value={Math.round(sc.half * 100)} />%</div>
-              <div className="scn-lbl">mitigas <b>la mitad</b></div>
+              <div className="scn-lbl">{tr("mitigas", "you mitigate")} <b>{tr("la mitad", "half")}</b></div>
             </div>
             <div className="scn-arrow">→</div>
             <div className="scn scn-ign">
               <div className="scn-num"><AnimatedNumber value={Math.round(sc.ignore * 100)} />%</div>
-              <div className="scn-lbl">ignoras <b>todo</b></div>
+              <div className="scn-lbl">{tr("ignoras", "you ignore")} <b>{tr("todo", "everything")}</b></div>
             </div>
           </div>
         );
       })()}
-      <div className="scn-foot">prob. de seguir vivo a 5 años · cada escenario sale de los mismos riesgos reales</div>
+      <div className="scn-foot">
+        {tr(
+          "prob. de seguir vivo a 5 años · cada escenario sale de los mismos riesgos reales",
+          "prob. of still being alive at 5 years · each scenario comes from the same real risks"
+        )}
+      </div>
 
       <div className="chart-title" style={{ marginTop: 16 }}>
-        curva de supervivencia — <span className="lg-all">mitigar todo</span> ·{" "}
-        <span className="lg-half">la mitad</span> · <span className="lg-ign">ignorar</span>
+        {tr("curva de supervivencia", "survival curve")} — <span className="lg-all">{tr("mitigar todo", "mitigate all")}</span> ·{" "}
+        <span className="lg-half">{tr("la mitad", "half")}</span> · <span className="lg-ign">{tr("ignorar", "ignore")}</span>
       </div>
-      <SurvivalChart sim={sim} />
+      <SurvivalChart sim={sim} lang={lang} />
 
       <div className="chart-title" style={{ marginTop: 18 }}>
-        trayectoria — <span className="lg-ign">ignorar señales</span> vs{" "}
-        <span className="lg-mit">aplicar mitigaciones</span>
+        {tr("trayectoria", "trajectory")} — <span className="lg-ign">{tr("ignorar señales", "ignore signals")}</span> {tr("vs", "vs")}{" "}
+        <span className="lg-mit">{tr("aplicar mitigaciones", "apply mitigations")}</span>
       </div>
-      <TrajectoryChart sim={sim} />
+      <TrajectoryChart sim={sim} lang={lang} />
 
       {sim.events.length > 0 && (
         <ol className="sim-events">
@@ -186,9 +193,9 @@ export default function SimViz({ simulation }: { simulation: Simulation }) {
             <li key={i}>
               <span className="ev-n">{i + 1}</span>
               <span className="ev-when">{e.whenLabel}</span>
-              <span className="ev-title">{e.failureCategory}</span>
+              <span className="ev-title">{tlabel(e.failureCategory, lang)}</span>
               <Link className="ev-case" href={e.webUrl}>
-                como «{e.caseName}» →
+                {tr("como", "like")} «{e.caseName}» →
               </Link>
             </li>
           ))}

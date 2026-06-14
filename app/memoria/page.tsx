@@ -39,7 +39,8 @@ export default function MemoriaPage() {
             <>
               The company's memory: each case file is a past project the agent retrieves and cites as
               evidence in a pre-mortem. This demo ships with <b>{records.length} anonymized sample cases</b>{" "}
-              (codenames) — below you can <b>load your own company's history</b>.
+              (codenames) — below you can <b>load your own company's history</b>. Labels are localized;
+              the free-text records are shown in the archive's original language (Spanish in this demo).
             </>
           ) : (
             <>

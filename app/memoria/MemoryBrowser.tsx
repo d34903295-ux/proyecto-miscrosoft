@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { PastProjectRecord } from "@/lib/types";
+import { tlabel } from "@/lib/labels";
 
 function norm(s: string): string {
   return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -85,7 +86,7 @@ export default function MemoryBrowser({ records, lang = "es" }: { records: PastP
             aria-pressed={cat === c}
             onClick={() => setCat(cat === c ? null : c)}
           >
-            {c}
+            {tlabel(c, lang)}
           </button>
         ))}
       </div>
@@ -106,7 +107,7 @@ export default function MemoryBrowser({ records, lang = "es" }: { records: PastP
             aria-pressed={client === c}
             onClick={() => setClient(client === c ? null : c)}
           >
-            {c}
+            {tlabel(c, lang)}
           </button>
         ))}
       </div>
@@ -126,15 +127,15 @@ export default function MemoryBrowser({ records, lang = "es" }: { records: PastP
               </span>
             </div>
             <div className="arch-name">{r.name}</div>
-            <div className="arch-cat">{r.failureCategory}</div>
+            <div className="arch-cat">{tlabel(r.failureCategory, lang)}</div>
             <div className="arch-snippet prose">{r.whatWentWrong}</div>
             <div className="tags" style={{ marginTop: 10 }}>
               <span className="tag">
-                <b>{tr("cliente", "client")}</b> {r.clientType}
+                <b>{tr("cliente", "client")}</b> {tlabel(r.clientType, lang)}
               </span>
               {r.tech.slice(0, 2).map((t) => (
                 <span className="tag" key={t}>
-                  <b>tech</b> {t}
+                  <b>tech</b> {tlabel(t, lang)}
                 </span>
               ))}
             </div>
