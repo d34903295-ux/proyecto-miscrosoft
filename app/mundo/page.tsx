@@ -93,7 +93,7 @@ export default function MundoPage() {
           <Link href="/" className="syslink">
             &lt;&lt; volver
           </Link>
-          <span>rev 1.1</span>
+          <span>rev 1.4</span>
         </div>
       </div>
 
