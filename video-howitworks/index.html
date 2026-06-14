@@ -1,0 +1,424 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      /* frame.md: Terminal Forense — mono, near-black, un acento ámbar, filetes */
+      :root {
+        --bg: #0b0b0d;
+        --bg-panel: #100f12;
+        --ink: #e9e6df;
+        --ink-2: #b7b3aa;
+        --ink-dim: #86837c;
+        --line: #2a2930;
+        --amber: #f2b01e;
+        --amber-ink: #1a1407;
+        --red: #e0574e;
+        --green: #5bbd6b;
+      }
+      * { margin: 0; box-sizing: border-box; }
+      [data-composition-id="root"] {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        background: var(--bg);
+        color: var(--ink);
+        overflow: hidden;
+        position: relative;
+        perspective: 1600px;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 68px,
+          linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 68px 100%,
+          var(--bg);
+        transform-style: preserve-3d;
+      }
+      .scene-content {
+        width: 100%;
+        height: 100%;
+        padding: 110px 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 26px;
+        transform-style: preserve-3d;
+      }
+      .kicker {
+        font-size: 26px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--amber);
+      }
+      .mega {
+        font-size: 132px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 0.96;
+      }
+      .mega .dim { color: var(--ink-dim); }
+      .sub {
+        font-size: 34px;
+        color: var(--ink-2);
+        max-width: 1320px;
+        line-height: 1.45;
+      }
+      .sub b { color: var(--amber); }
+      .cursor {
+        display: inline-block;
+        width: 20px;
+        height: 84px;
+        background: var(--amber);
+        vertical-align: -4px;
+        margin-left: 12px;
+      }
+      .rule { height: 1px; background: var(--line); width: 100%; }
+      .foot {
+        font-size: 26px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+      }
+      /* etiqueta de paso gigante */
+      .steplabel { display: flex; align-items: baseline; gap: 28px; }
+      .stepnum {
+        font-size: 150px;
+        font-weight: 700;
+        color: var(--amber);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+      .stepname {
+        font-size: 84px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+      }
+      /* chips / paneles */
+      .chips { display: flex; flex-wrap: wrap; gap: 16px; }
+      .chip {
+        border: 1px solid var(--line);
+        background: var(--bg-panel);
+        color: var(--ink-2);
+        font-size: 27px;
+        padding: 16px 28px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .chip.hot { border-color: var(--amber); color: var(--amber); }
+      .chip.win { border-color: var(--green); color: var(--green); }
+      /* tarjetas con profundidad (cámara 3D) */
+      .deck { display: flex; gap: 22px; }
+      .card {
+        flex: 1;
+        border: 1px solid var(--line);
+        background: var(--bg-panel);
+        padding: 40px 36px;
+      }
+      .card .t { font-size: 40px; font-weight: 700; text-transform: uppercase; line-height: 1.05; }
+      .card .d { font-size: 23px; color: var(--ink-dim); line-height: 1.45; margin-top: 12px; }
+      /* medidor / número grande */
+      .meter { display: flex; align-items: baseline; gap: 28px; }
+      .idx {
+        font-size: 200px; font-weight: 700; color: var(--amber);
+        font-variant-numeric: tabular-nums; line-height: 1;
+      }
+      .idx.red { color: var(--red); }
+      .idx small { font-size: 52px; color: var(--ink-dim); }
+      .vbar { height: 22px; border: 1px solid var(--line); background: var(--bg-panel); width: 100%; overflow: hidden; }
+      .vbar span { display: block; height: 100%; width: 100%; background: var(--amber); transform-origin: left center; }
+      .vbar span.red { background: var(--red); }
+      /* memoria: filas de casos */
+      .rows { display: flex; flex-direction: column; gap: 12px; }
+      .row {
+        display: flex; align-items: center; gap: 20px;
+        border: 1px solid var(--line); background: var(--bg-panel);
+        padding: 18px 26px; font-size: 26px; color: var(--ink-2);
+      }
+      .row .pct { color: var(--amber); font-variant-numeric: tabular-nums; margin-left: auto; }
+      .row.dead { opacity: 0.35; }
+      .row.dead .pct { color: var(--ink-dim); }
+      /* big statement */
+      .stamp {
+        display: inline-block; border: 2px solid var(--amber); color: var(--amber);
+        font-size: 64px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+        padding: 18px 36px;
+      }
+      .cta-center { align-items: center; text-align: center; }
+      .tomb { width: 150px; height: 150px; }
+      /* traza */
+      .trace { display: flex; flex-direction: column; gap: 14px; }
+      .tstep { display: flex; align-items: center; gap: 22px; font-size: 30px; color: var(--ink-2); }
+      .tstep .tn { color: var(--amber); }
+      .tstep .tms { margin-left: auto; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+      .tdot { width: 12px; height: 12px; background: var(--amber); flex: none; }
+      /* z-stacking: la escena entrante cubre a la saliente */
+      #s0 { z-index: 0; } #s1 { z-index: 1; } #s2 { z-index: 2; }
+      #s3 { z-index: 3; } #s4 { z-index: 4; } #s5 { z-index: 5; }
+      #s6 { z-index: 6; } #s7 { z-index: 7; } #s8 { z-index: 8; } #s9 { z-index: 9; }
+    </style>
+  </head>
+  <body>
+    <div data-composition-id="root" data-width="1920" data-height="1080" data-start="0" data-duration="129">
+
+      <!-- S0 · intro -->
+      <div id="s0" class="scene clip" data-start="0" data-duration="8" data-track-index="1">
+        <div class="scene-content" id="s0-c">
+          <div class="kicker" id="s0-k">// behind the scenes</div>
+          <div class="mega" id="s0-l1">Under the hood</div>
+          <div class="mega" id="s0-l2"><span class="dim">the orchestration</span><span class="cursor" id="s0-cur"></span></div>
+          <div class="sub" id="s0-s">What happens when you hit <b>RUN</b> — step by step.</div>
+        </div>
+      </div>
+
+      <!-- S1 · profile -->
+      <div id="s1" class="scene clip" data-start="7.4" data-duration="14.6" data-track-index="2">
+        <div class="scene-content" id="s1-c">
+          <div class="kicker" id="s1-k">// step one</div>
+          <div class="steplabel"><div class="stepnum" id="s1-n">01</div><div class="stepname" id="s1-name">Profile</div></div>
+          <div class="sub" id="s1-s">A <b>Microsoft Foundry</b> model turns your idea into structure.</div>
+          <div class="chips" id="s1-chips">
+            <span class="chip" id="s1-a">client type</span>
+            <span class="chip" id="s1-b">technology</span>
+            <span class="chip" id="s1-d">market bet</span>
+            <span class="chip" id="s1-e">team dynamics</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- S2 · retrieve -->
+      <div id="s2" class="scene clip" data-start="21.4" data-duration="14.6" data-track-index="1">
+        <div class="scene-content" id="s2-c">
+          <div class="kicker" id="s2-k">// step two · the heart of "it remembers"</div>
+          <div class="steplabel"><div class="stepnum" id="s2-n">02</div><div class="stepname" id="s2-name">Retrieve</div></div>
+          <div class="sub" id="s2-s">Not keywords — <b>embeddings</b> that measure meaning, plus the overlap of four business dimensions.</div>
+          <div class="rows" id="s2-rows">
+            <div class="row" id="s2-r1">PRJ · Cygnus — telemedicine <span class="pct">91%</span></div>
+            <div class="row" id="s2-r2">PRJ · Phoenix — AI model in prod <span class="pct">84%</span></div>
+            <div class="row" id="s2-r3">PRJ · Scutum — access control <span class="pct">76%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S3 · deduplicate -->
+      <div id="s3" class="scene clip" data-start="35.4" data-duration="11.6" data-track-index="2">
+        <div class="scene-content" id="s3-c">
+          <div class="kicker" id="s3-k">// step three</div>
+          <div class="steplabel"><div class="stepnum" id="s3-n">03</div><div class="stepname" id="s3-name">Deduplicate</div></div>
+          <div class="sub" id="s3-s">One risk per failure type — <b>never the same risk twice</b>.</div>
+          <div class="rows" id="s3-rows">
+            <div class="row" id="s3-r1">compliance / data handling <span class="pct">kept</span></div>
+            <div class="row dead" id="s3-r2">compliance / data handling <span class="pct">merged</span></div>
+            <div class="row dead" id="s3-r3">compliance / data handling <span class="pct">merged</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S4 · map -->
+      <div id="s4" class="scene clip" data-start="46.4" data-duration="14.6" data-track-index="1">
+        <div class="scene-content cta-center" id="s4-c">
+          <div class="kicker" id="s4-k">// step four · map the failure onto your project</div>
+          <div class="stamp" id="s4-stamp">Recall, don't invent</div>
+          <div class="sub" id="s4-s" style="text-align:center">Each risk uses <b>only</b> what the real case file says. Inventing facts is forbidden.</div>
+        </div>
+      </div>
+
+      <!-- S5 · refute -->
+      <div id="s5" class="scene clip" data-start="60.4" data-duration="15.6" data-track-index="2">
+        <div class="scene-content" id="s5-c">
+          <div class="kicker" id="s5-k">// step five · anti-confirmation</div>
+          <div class="steplabel"><div class="stepnum" id="s5-n">05</div><div class="stepname" id="s5-name">Refute</div></div>
+          <div class="sub" id="s5-s">A skeptical second pass argues against each risk and recalibrates its confidence.</div>
+          <div class="meter" id="s5-meter">
+            <div class="idx red"><span id="s5-num">80</span><small>%</small></div>
+            <div style="flex:1">
+              <div class="vbar"><span class="red" id="s5-fill"></span></div>
+              <div class="foot" id="s5-foot" style="margin-top:16px">the system argues with itself</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S6 · rank -->
+      <div id="s6" class="scene clip" data-start="75.4" data-duration="11.6" data-track-index="1">
+        <div class="scene-content" id="s6-c">
+          <div class="kicker" id="s6-k">// step six</div>
+          <div class="steplabel"><div class="stepnum" id="s6-n">06</div><div class="stepname" id="s6-name">Rank</div></div>
+          <div class="chips" id="s6-chips">
+            <span class="chip hot" id="s6-a">relevance</span>
+            <span class="chip hot" id="s6-b">× calibrated confidence</span>
+            <span class="chip hot" id="s6-d">× historical severity</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- S7 · self-assess -->
+      <div id="s7" class="scene clip" data-start="86.4" data-duration="16.6" data-track-index="2">
+        <div class="scene-content" id="s7-c">
+          <div class="kicker" id="s7-k">// step seven · self-assess</div>
+          <div class="steplabel"><div class="stepnum" id="s7-n">07</div><div class="stepname" id="s7-name" style="font-size:64px">What it doesn't know</div></div>
+          <div class="sub" id="s7-s">It admits what's missing and where its memory is blind — then builds the rest, anchored to real risks.</div>
+          <div class="deck" id="s7-deck">
+            <div class="card" id="s7-c1"><div class="t">Board</div><div class="d">Would you invest $1M?</div></div>
+            <div class="card" id="s7-c2"><div class="t">Expected cost</div><div class="d">Probability × impact</div></div>
+            <div class="card" id="s7-c3"><div class="t">No return</div><div class="d">The deadline to fix it</div></div>
+            <div class="card" id="s7-c4"><div class="t">Simulation</div><div class="d">10-year survival</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S8 · hardened orchestration + trace -->
+      <div id="s8" class="scene clip" data-start="102.4" data-duration="16.6" data-track-index="1">
+        <div class="scene-content" id="s8-c">
+          <div class="kicker" id="s8-k">// hardened orchestration</div>
+          <div class="mega" id="s8-l1" style="font-size:92px">An auditable<br />reasoning trace</div>
+          <div class="trace" id="s8-trace">
+            <div class="tstep" id="s8-t1"><span class="tdot"></span><span class="tn">[1]</span> profile<span class="tms">142 ms</span></div>
+            <div class="tstep" id="s8-t2"><span class="tdot"></span><span class="tn">[2]</span> retrieve<span class="tms">88 ms</span></div>
+            <div class="tstep" id="s8-t3"><span class="tdot"></span><span class="tn">[5]</span> refute<span class="tms">311 ms</span></div>
+          </div>
+          <div class="chips" id="s8-chips">
+            <span class="chip" id="s8-a">concurrency limit</span>
+            <span class="chip" id="s8-b">429 retry</span>
+            <span class="chip" id="s8-d">fallback model</span>
+            <span class="chip hot" id="s8-e">MCP tool</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- S9 · close (única escena con salida) -->
+      <div id="s9" class="scene clip" data-start="118.4" data-duration="10.6" data-track-index="2">
+        <div class="scene-content cta-center" id="s9-c">
+          <div class="foot" id="s9-pre">not a magic answer</div>
+          <div class="mega" id="s9-l1" style="font-size:104px">A chain of<br />reasoning</div>
+          <div class="foot" id="s9-foot">transparent · measurable · traceable to real evidence</div>
+          <div class="kicker" id="s9-logo" style="margin-top:18px">// pre-mortem institucional</div>
+        </div>
+      </div>
+
+      <script src="gsap.min.js"></script>
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        // contador genérico seekeable
+        function countTo(proxy, el, to, t, dur) {
+          tl.to(proxy, { v: to, duration: dur, ease: "power2.out",
+            onUpdate: () => { el().textContent = String(Math.round(proxy.v)); } }, t);
+        }
+        // cámara 3D: empuje lento (dolly) por escena — mata tiempos muertos sin ser salida
+        function dolly(sel, t, dur) {
+          tl.fromTo(sel, { scale: 1.0, rotationY: 0 }, { scale: 1.035, rotationY: -1.2, duration: dur, ease: "none" }, t);
+        }
+
+        // ── S0 (0–8)
+        tl.from("#s0-k", { y: 28, opacity: 0, duration: 0.5, ease: "power2.out" }, 0.2);
+        tl.from("#s0-l1", { y: 80, rotationX: -40, opacity: 0, duration: 0.8, ease: "power3.out" }, 0.45);
+        tl.from("#s0-l2", { y: 80, rotationX: -40, opacity: 0, duration: 0.8, ease: "expo.out" }, 0.75);
+        tl.from("#s0-s", { opacity: 0, y: 24, duration: 0.7, ease: "power1.inOut" }, 1.5);
+        tl.to("#s0-cur", { opacity: 0, duration: 0.5, ease: "steps(1)", repeat: 11, yoyo: true }, 1.3);
+        dolly("#s0-c", 0.2, 7.6);
+
+        // ── S1 profile (wipe desde la derecha)
+        tl.from("#s1", { clipPath: "inset(0 0 0 100%)", duration: 0.6, ease: "power3.inOut" }, 7.4);
+        tl.from("#s1-k", { x: -40, opacity: 0, duration: 0.5, ease: "power2.out" }, 8.1);
+        tl.from("#s1-n", { y: 70, opacity: 0, duration: 0.6, ease: "back.out(1.5)" }, 8.3);
+        tl.from("#s1-name", { x: 50, opacity: 0, duration: 0.6, ease: "expo.out" }, 8.5);
+        tl.from("#s1-s", { y: 36, opacity: 0, duration: 0.6, ease: "power2.out" }, 8.9);
+        tl.from("#s1-a", { y: 40, opacity: 0, duration: 0.45, ease: "power2.out" }, 9.5);
+        tl.from("#s1-b", { y: 40, opacity: 0, duration: 0.45, ease: "power3.out" }, 9.65);
+        tl.from("#s1-d", { y: 40, opacity: 0, duration: 0.45, ease: "expo.out" }, 9.8);
+        tl.from("#s1-e", { y: 40, opacity: 0, duration: 0.45, ease: "back.out(1.6)" }, 9.95);
+        dolly("#s1-c", 8.0, 13.4);
+
+        // ── S2 retrieve (wipe vertical)
+        tl.from("#s2", { clipPath: "inset(100% 0 0 0)", duration: 0.6, ease: "power3.inOut" }, 21.4);
+        tl.from("#s2-k", { y: 28, opacity: 0, duration: 0.5, ease: "power2.out" }, 22.1);
+        tl.from("#s2-n", { y: 70, opacity: 0, duration: 0.6, ease: "back.out(1.5)" }, 22.3);
+        tl.from("#s2-name", { x: 50, opacity: 0, duration: 0.6, ease: "expo.out" }, 22.5);
+        tl.from("#s2-s", { y: 36, opacity: 0, duration: 0.6, ease: "power2.out" }, 22.9);
+        tl.from("#s2-r1", { x: -50, opacity: 0, duration: 0.5, ease: "power3.out" }, 23.6);
+        tl.from("#s2-r2", { x: -50, opacity: 0, duration: 0.5, ease: "power3.out" }, 23.8);
+        tl.from("#s2-r3", { x: -50, opacity: 0, duration: 0.5, ease: "power3.out" }, 24.0);
+        dolly("#s2-c", 22.0, 13.4);
+
+        // ── S3 deduplicate (wipe izquierda)
+        tl.from("#s3", { clipPath: "inset(0 100% 0 0)", duration: 0.6, ease: "power3.inOut" }, 35.4);
+        tl.from("#s3-k", { x: -40, opacity: 0, duration: 0.5, ease: "power2.out" }, 36.1);
+        tl.from("#s3-n", { y: 70, opacity: 0, duration: 0.6, ease: "back.out(1.5)" }, 36.3);
+        tl.from("#s3-name", { x: 50, opacity: 0, duration: 0.6, ease: "expo.out" }, 36.5);
+        tl.from("#s3-s", { y: 36, opacity: 0, duration: 0.6, ease: "power2.out" }, 36.9);
+        tl.from("#s3-r1", { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 37.5);
+        tl.from("#s3-r2", { y: 30, opacity: 0, duration: 0.5, ease: "power2.out" }, 37.7);
+        tl.from("#s3-r3", { y: 30, opacity: 0, duration: 0.5, ease: "power2.out" }, 37.9);
+        dolly("#s3-c", 36.0, 10.4);
+
+        // ── S4 map (wipe desde la derecha)
+        tl.from("#s4", { clipPath: "inset(0 0 0 100%)", duration: 0.6, ease: "power3.inOut" }, 46.4);
+        tl.from("#s4-k", { y: 28, opacity: 0, duration: 0.5, ease: "power2.out" }, 47.1);
+        tl.from("#s4-stamp", { scale: 0.7, rotationX: -30, opacity: 0, duration: 0.8, ease: "back.out(1.6)" }, 47.4);
+        tl.from("#s4-s", { y: 30, opacity: 0, duration: 0.6, ease: "power2.out" }, 48.2);
+        dolly("#s4-c", 47.0, 13.4);
+
+        // ── S5 refute (wipe vertical) · número 80 → 50 + barra que baja
+        tl.from("#s5", { clipPath: "inset(100% 0 0 0)", duration: 0.6, ease: "power3.inOut" }, 60.4);
+        tl.from("#s5-k", { x: -40, opacity: 0, duration: 0.5, ease: "power2.out" }, 61.1);
+        tl.from("#s5-n", { y: 70, opacity: 0, duration: 0.6, ease: "back.out(1.5)" }, 61.3);
+        tl.from("#s5-name", { x: 50, opacity: 0, duration: 0.6, ease: "expo.out" }, 61.5);
+        tl.from("#s5-s", { y: 36, opacity: 0, duration: 0.6, ease: "power2.out" }, 61.9);
+        tl.from("#s5-meter", { y: 50, opacity: 0, duration: 0.6, ease: "power3.out" }, 62.6);
+        const p5 = { v: 80 };
+        const n5 = () => document.getElementById("s5-num");
+        tl.fromTo("#s5-fill", { scaleX: 0.8 }, { scaleX: 0.5, duration: 1.6, ease: "power2.inOut" }, 63.4);
+        countTo(p5, n5, 50, 63.4, 1.6);
+        dolly("#s5-c", 61.0, 14.4);
+
+        // ── S6 rank (wipe izquierda)
+        tl.from("#s6", { clipPath: "inset(0 100% 0 0)", duration: 0.6, ease: "power3.inOut" }, 75.4);
+        tl.from("#s6-k", { x: -40, opacity: 0, duration: 0.5, ease: "power2.out" }, 76.1);
+        tl.from("#s6-n", { y: 70, opacity: 0, duration: 0.6, ease: "back.out(1.5)" }, 76.3);
+        tl.from("#s6-name", { x: 50, opacity: 0, duration: 0.6, ease: "expo.out" }, 76.5);
+        tl.from("#s6-a", { y: 40, opacity: 0, duration: 0.5, ease: "power3.out" }, 77.2);
+        tl.from("#s6-b", { y: 40, opacity: 0, duration: 0.5, ease: "expo.out" }, 77.45);
+        tl.from("#s6-d", { y: 40, opacity: 0, duration: 0.5, ease: "back.out(1.5)" }, 77.7);
+        dolly("#s6-c", 76.0, 10.4);
+
+        // ── S7 self-assess (wipe vertical)
+        tl.from("#s7", { clipPath: "inset(100% 0 0 0)", duration: 0.6, ease: "power3.inOut" }, 86.4);
+        tl.from("#s7-k", { y: 28, opacity: 0, duration: 0.5, ease: "power2.out" }, 87.1);
+        tl.from("#s7-n", { y: 70, opacity: 0, duration: 0.6, ease: "back.out(1.5)" }, 87.3);
+        tl.from("#s7-name", { x: 50, opacity: 0, duration: 0.6, ease: "expo.out" }, 87.5);
+        tl.from("#s7-s", { y: 36, opacity: 0, duration: 0.6, ease: "power2.out" }, 87.9);
+        tl.from("#s7-c1", { y: 60, rotationY: -16, opacity: 0, duration: 0.55, ease: "power3.out" }, 88.7);
+        tl.from("#s7-c2", { y: 60, rotationY: -16, opacity: 0, duration: 0.55, ease: "power3.out" }, 88.9);
+        tl.from("#s7-c3", { y: 60, rotationY: -16, opacity: 0, duration: 0.55, ease: "power3.out" }, 89.1);
+        tl.from("#s7-c4", { y: 60, rotationY: -16, opacity: 0, duration: 0.55, ease: "power3.out" }, 89.3);
+        dolly("#s7-c", 87.0, 15.4);
+
+        // ── S8 hardened (wipe desde la derecha)
+        tl.from("#s8", { clipPath: "inset(0 0 0 100%)", duration: 0.6, ease: "power3.inOut" }, 102.4);
+        tl.from("#s8-k", { x: -40, opacity: 0, duration: 0.5, ease: "power2.out" }, 103.1);
+        tl.from("#s8-l1", { y: 50, opacity: 0, duration: 0.7, ease: "power3.out" }, 103.4);
+        tl.from("#s8-t1", { x: -40, opacity: 0, duration: 0.45, ease: "power3.out" }, 104.2);
+        tl.from("#s8-t2", { x: -40, opacity: 0, duration: 0.45, ease: "power3.out" }, 104.45);
+        tl.from("#s8-t3", { x: -40, opacity: 0, duration: 0.45, ease: "power3.out" }, 104.7);
+        tl.from("#s8-a", { y: 40, opacity: 0, duration: 0.45, ease: "power2.out" }, 105.4);
+        tl.from("#s8-b", { y: 40, opacity: 0, duration: 0.45, ease: "power3.out" }, 105.55);
+        tl.from("#s8-d", { y: 40, opacity: 0, duration: 0.45, ease: "expo.out" }, 105.7);
+        tl.from("#s8-e", { scale: 0.6, opacity: 0, duration: 0.5, ease: "back.out(2)" }, 105.9);
+        dolly("#s8-c", 103.0, 15.4);
+
+        // ── S9 close (wipe vertical inverso) · única escena con salida
+        tl.from("#s9", { clipPath: "inset(0 0 100% 0)", duration: 0.6, ease: "power3.inOut" }, 118.4);
+        tl.from("#s9-pre", { opacity: 0, y: 20, duration: 0.5, ease: "power2.out" }, 119.1);
+        tl.from("#s9-l1", { y: 70, rotationX: -30, opacity: 0, duration: 0.8, ease: "power3.out" }, 119.4);
+        tl.from("#s9-foot", { opacity: 0, duration: 0.6, ease: "power1.inOut" }, 120.3);
+        tl.from("#s9-logo", { opacity: 0, y: 18, duration: 0.5, ease: "power2.out" }, 120.8);
+        tl.to("#s9-c", { opacity: 0, duration: 0.9, ease: "power2.in" }, 127.6);
+
+        window.__timelines["root"] = tl;
+      </script>
+    </div>
+  </body>
+</html>
