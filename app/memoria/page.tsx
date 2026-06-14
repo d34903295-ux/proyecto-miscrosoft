@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAllRecords } from "@/lib/retrieval";
 import MemoryBrowser from "./MemoryBrowser";
+import MemoryLoader from "./MemoryLoader";
 
 export const dynamic = "force-dynamic";
 
@@ -31,16 +32,20 @@ export default function MemoriaPage() {
           Expedientes
         </h1>
         <p className="lede prose">
-          Todos los proyectos pasados de la memoria. Cada uno es un caso real que el agente puede
-          recuperar y citar como evidencia en un pre-mortem.
+          La memoria de la empresa: cada expediente es un caso pasado que el agente recupera y cita
+          como evidencia en un pre-mortem. Esta demo trae <b>{records.length} casos de ejemplo
+          anonimizados</b> (nombres en clave) — abajo puedes <b>cargar la historia de tu propia
+          empresa</b>.
         </p>
       </section>
+
+      <MemoryLoader />
 
       <MemoryBrowser records={records} />
 
       <div className="footer">
-        Datos sintéticos para el MVP. En producción provendrían de <b>Microsoft Work IQ / Copilot
-        Retrieval API</b> a través del mismo contrato de recuperación.
+        Memoria institucional viva: se carga por CSV / API o, en producción, conectando los documentos
+        internos de la empresa vía <b>Microsoft Foundry IQ</b> — mismo contrato de recuperación.
       </div>
     </div>
   );
