@@ -3,174 +3,110 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      /* frame.md: Terminal Forense — mono, near-black, un acento ámbar, filetes */
       :root {
-        --bg: #0b0b0d;
-        --bg-panel: #100f12;
-        --ink: #e9e6df;
-        --ink-2: #b7b3aa;
-        --ink-dim: #86837c;
-        --line: #2a2930;
-        --amber: #f2b01e;
-        --amber-ink: #1a1407;
-        --red: #e0574e;
-        --green: #5bbd6b;
+        --bg: #0b0b0d; --bg-panel: #100f12; --ink: #e9e6df; --ink-2: #b7b3aa;
+        --ink-dim: #86837c; --line: #2a2930; --amber: #f2b01e; --amber-ink: #1a1407;
+        --red: #e0574e; --green: #5bbd6b;
       }
       * { margin: 0; box-sizing: border-box; }
       [data-composition-id="root"] {
         font-family: "JetBrains Mono", ui-monospace, monospace;
-        background: var(--bg);
-        color: var(--ink);
-        overflow: hidden;
-        position: relative;
+        background: var(--bg); color: var(--ink); overflow: hidden; position: relative;
       }
       .scene {
-        position: absolute;
-        inset: 0;
+        position: absolute; inset: 0; overflow: hidden;
         background:
-          linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 72px,
-          linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 72px 100%,
-          var(--bg);
+          radial-gradient(1100px 620px at 30% 18%, rgba(242,176,30,0.07), transparent 60%),
+          linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 74px,
+          linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 74px 100%,
+          radial-gradient(140% 120% at 50% 0%, #131217 0%, var(--bg) 60%);
       }
-      /* margen seguro generoso: nada toca los bordes */
-      .scene-content {
-        width: 100%;
-        height: 100%;
-        padding: 130px 210px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 26px;
+      /* halo de luz por escena (profundidad/iluminación) */
+      .glow {
+        position: absolute; width: 1200px; height: 1200px; left: 8%; top: -22%;
+        background: radial-gradient(circle, rgba(242,176,30,0.10), transparent 62%);
+        pointer-events: none; filter: blur(8px);
       }
-      .kicker {
-        font-size: 25px;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: var(--amber);
+      .glow.r { background: radial-gradient(circle, rgba(224,87,78,0.09), transparent 62%); left: 60%; }
+      /* paneles flotantes decorativos (perspectiva, profundidad) */
+      .panel {
+        position: absolute; border: 1px solid var(--line); background: rgba(16,15,18,0.5);
+        pointer-events: none;
       }
-      .mega {
-        font-size: 104px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: -0.02em;
-        line-height: 0.98;
+      .sc {
+        position: relative; z-index: 2; width: 100%; height: 100%;
+        padding: 130px 210px; display: flex; flex-direction: column;
+        justify-content: center; gap: 26px;
       }
+      .cta-center { align-items: center; text-align: center; }
+      .kicker { font-size: 25px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--amber); }
+      .mega { font-size: 104px; font-weight: 700; text-transform: uppercase; letter-spacing: -0.02em; line-height: 0.98; }
       .mega .dim { color: var(--ink-dim); }
-      .sub {
-        font-size: 32px;
-        color: var(--ink-2);
-        max-width: 1400px;
-        line-height: 1.45;
-      }
+      .glow-t { text-shadow: 0 0 42px rgba(242,176,30,0.45); }
+      .sub { font-size: 32px; color: var(--ink-2); max-width: 1400px; line-height: 1.45; }
       .sub b { color: var(--amber); }
-      .cursor {
-        display: inline-block;
-        width: 18px;
-        height: 70px;
-        background: var(--amber);
-        vertical-align: -4px;
-        margin-left: 12px;
-      }
-      .foot {
-        font-size: 25px;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--ink-dim);
-      }
-      /* etiqueta de paso */
+      /* eslogan */
+      .slml { position: relative; display: inline-block; }
+      .strike { position: absolute; left: -8px; right: -8px; top: 52%; height: 5px; background: var(--red); transform-origin: left center; }
+      .foot { font-size: 25px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
       .steplabel { display: flex; align-items: baseline; gap: 26px; }
-      .stepnum {
-        font-size: 124px;
-        font-weight: 700;
-        color: var(--amber);
-        font-variant-numeric: tabular-nums;
-        line-height: 1;
-      }
-      .stepname {
-        font-size: 72px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: -0.01em;
-      }
-      /* chips */
+      .stepnum { font-size: 124px; font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; line-height: 1; text-shadow: 0 0 38px rgba(242,176,30,0.4); }
+      .stepname { font-size: 72px; font-weight: 700; text-transform: uppercase; letter-spacing: -0.01em; }
       .chips { display: flex; flex-wrap: wrap; gap: 14px; }
-      .chip {
-        border: 1px solid var(--line);
-        background: var(--bg-panel);
-        color: var(--ink-2);
-        font-size: 25px;
-        padding: 14px 24px;
-        text-transform: uppercase;
-        letter-spacing: 0.07em;
-      }
-      .chip.hot { border-color: var(--amber); color: var(--amber); }
-      /* tarjetas */
+      .chip { border: 1px solid var(--line); background: var(--bg-panel); color: var(--ink-2); font-size: 25px; padding: 14px 24px; text-transform: uppercase; letter-spacing: 0.07em; }
+      .chip.hot { border-color: var(--amber); color: var(--amber); box-shadow: 0 0 24px rgba(242,176,30,0.15); }
       .deck { display: flex; gap: 18px; }
-      .card {
-        flex: 1 1 0;
-        min-width: 0;
-        border: 1px solid var(--line);
-        background: var(--bg-panel);
-        padding: 30px 26px;
-      }
+      .card { flex: 1 1 0; min-width: 0; border: 1px solid var(--line); background: rgba(16,15,18,0.85); padding: 30px 26px; }
       .card .t { font-size: 30px; font-weight: 700; text-transform: uppercase; line-height: 1.05; }
       .card .d { font-size: 20px; color: var(--ink-dim); line-height: 1.4; margin-top: 10px; }
-      /* medidor / número grande */
       .meter { display: flex; align-items: baseline; gap: 28px; }
-      .idx {
-        font-size: 168px; font-weight: 700; color: var(--amber);
-        font-variant-numeric: tabular-nums; line-height: 1;
-      }
-      .idx.red { color: var(--red); }
+      .idx { font-size: 168px; font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; line-height: 1; }
+      .idx.red { color: var(--red); text-shadow: 0 0 44px rgba(224,87,78,0.5); }
       .idx small { font-size: 46px; color: var(--ink-dim); }
       .vbar { height: 20px; border: 1px solid var(--line); background: var(--bg-panel); width: 100%; overflow: hidden; }
       .vbar span { display: block; height: 100%; width: 100%; background: var(--amber); transform-origin: left center; }
-      .vbar span.red { background: var(--red); }
-      /* memoria: filas */
+      .vbar span.red { background: var(--red); box-shadow: 0 0 24px rgba(224,87,78,0.5); }
       .rows { display: flex; flex-direction: column; gap: 11px; max-width: 1400px; }
-      .row {
-        display: flex; align-items: center; gap: 18px;
-        border: 1px solid var(--line); background: var(--bg-panel);
-        padding: 16px 24px; font-size: 25px; color: var(--ink-2);
-      }
+      .row { display: flex; align-items: center; gap: 18px; border: 1px solid var(--line); background: rgba(16,15,18,0.85); padding: 16px 24px; font-size: 25px; color: var(--ink-2); }
       .row .pct { color: var(--amber); font-variant-numeric: tabular-nums; margin-left: auto; }
-      .row.dead { opacity: 0.35; }
+      .row.dead { opacity: 0.32; }
       .row.dead .pct { color: var(--ink-dim); }
-      /* sello */
-      .stamp {
-        display: inline-block; border: 2px solid var(--amber); color: var(--amber);
-        font-size: 58px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
-        padding: 18px 34px;
-      }
-      .cta-center { align-items: center; text-align: center; }
-      /* traza */
+      .stamp { display: inline-block; border: 2px solid var(--amber); color: var(--amber); font-size: 58px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 18px 34px; box-shadow: 0 0 50px rgba(242,176,30,0.18); }
       .trace { display: flex; flex-direction: column; gap: 12px; max-width: 900px; }
       .tstep { display: flex; align-items: center; gap: 20px; font-size: 28px; color: var(--ink-2); }
       .tstep .tn { color: var(--amber); }
       .tstep .tms { margin-left: auto; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
-      .tdot { width: 11px; height: 11px; background: var(--amber); flex: none; }
-      /* z-stacking: escena entrante sobre la saliente (fundido cruzado) */
-      #s0 { z-index: 0; } #s1 { z-index: 1; } #s2 { z-index: 2; }
-      #s3 { z-index: 3; } #s4 { z-index: 4; } #s5 { z-index: 5; }
-      #s6 { z-index: 6; } #s7 { z-index: 7; } #s8 { z-index: 8; } #s9 { z-index: 9; }
+      .tdot { width: 11px; height: 11px; background: var(--amber); flex: none; box-shadow: 0 0 16px rgba(242,176,30,0.6); }
+      /* dust ambiental (encima, muy sutil) */
+      #dust { position: absolute; inset: 0; z-index: 80; pointer-events: none; }
+      #dust .dot { position: absolute; background: var(--amber); border-radius: 50%; opacity: 0.16; }
+      /* light-leak de transición */
+      #leak { position: absolute; inset: 0; z-index: 95; pointer-events: none; opacity: 0;
+        background: radial-gradient(60% 100% at 50% 50%, rgba(242,176,30,0.22), transparent 70%); }
+      #s0 { z-index: 1; } #s1 { z-index: 2; } #s2 { z-index: 3; } #s3 { z-index: 4; }
+      #s4 { z-index: 5; } #s5 { z-index: 6; } #s6 { z-index: 7; } #s7 { z-index: 8; }
+      #s8 { z-index: 9; } #s9 { z-index: 10; }
     </style>
   </head>
   <body>
     <div data-composition-id="root" data-width="1920" data-height="1080" data-start="0" data-duration="129">
 
-      <!-- S0 · intro -->
+      <!-- S0 · eslogan + apertura -->
       <div id="s0" class="scene clip" data-start="0" data-duration="8" data-track-index="1">
-        <div class="scene-content">
-          <div class="kicker" id="s0-k">// behind the scenes</div>
-          <div class="mega" id="s0-l1">Under the hood</div>
-          <div class="mega" id="s0-l2"><span class="dim">the orchestration</span><span class="cursor" id="s0-cur"></span></div>
-          <div class="sub" id="s0-s">What happens when you hit <b>RUN</b> — step by step.</div>
+        <div class="glow" data-layout-allow-overflow></div>
+        <div class="panel" id="s0-p1" style="width:420px;height:260px;left:1280px;top:170px;transform:rotate(0deg)"></div>
+        <div class="sc">
+          <div class="kicker" id="s0-k">// pre-mortem · institutional memory</div>
+          <div class="mega slml" id="s0-l1">It doesn't predict failure.<span class="strike" id="s0-strike"></span></div>
+          <div class="mega glow-t" id="s0-l2" style="color:var(--amber)">It remembers it.</div>
+          <div class="sub" id="s0-s">Under the hood — the orchestration, step by step.</div>
         </div>
       </div>
 
       <!-- S1 · profile -->
       <div id="s1" class="scene clip" data-start="7.4" data-duration="14.6" data-track-index="2">
-        <div class="scene-content">
+        <div class="glow" data-layout-allow-overflow></div>
+        <div class="sc">
           <div class="kicker" id="s1-k">// step one</div>
           <div class="steplabel"><div class="stepnum" id="s1-n">01</div><div class="stepname" id="s1-name">Profile</div></div>
           <div class="sub" id="s1-s">A <b>Microsoft Foundry</b> model turns your idea into structure.</div>
@@ -185,7 +121,8 @@
 
       <!-- S2 · retrieve -->
       <div id="s2" class="scene clip" data-start="21.4" data-duration="14.6" data-track-index="1">
-        <div class="scene-content">
+        <div class="glow" data-layout-allow-overflow></div>
+        <div class="sc">
           <div class="kicker" id="s2-k">// step two · the heart of "it remembers"</div>
           <div class="steplabel"><div class="stepnum" id="s2-n">02</div><div class="stepname" id="s2-name">Retrieve</div></div>
           <div class="sub" id="s2-s">Not keywords — <b>embeddings</b> that measure meaning, plus four business dimensions.</div>
@@ -199,7 +136,8 @@
 
       <!-- S3 · deduplicate -->
       <div id="s3" class="scene clip" data-start="35.4" data-duration="11.6" data-track-index="2">
-        <div class="scene-content">
+        <div class="glow r" data-layout-allow-overflow></div>
+        <div class="sc">
           <div class="kicker" id="s3-k">// step three</div>
           <div class="steplabel"><div class="stepnum" id="s3-n">03</div><div class="stepname" id="s3-name">Deduplicate</div></div>
           <div class="sub" id="s3-s">One risk per failure type — <b>never the same risk twice</b>.</div>
@@ -213,7 +151,8 @@
 
       <!-- S4 · map -->
       <div id="s4" class="scene clip" data-start="46.4" data-duration="14.6" data-track-index="1">
-        <div class="scene-content cta-center">
+        <div class="glow" data-layout-allow-overflow></div>
+        <div class="sc cta-center">
           <div class="kicker" id="s4-k">// step four · map the failure onto your project</div>
           <div class="stamp" id="s4-stamp">Recall, don't invent</div>
           <div class="sub" id="s4-s" style="text-align:center">Each risk uses <b>only</b> what the real case file says. Inventing facts is forbidden.</div>
@@ -222,7 +161,8 @@
 
       <!-- S5 · refute -->
       <div id="s5" class="scene clip" data-start="60.4" data-duration="15.6" data-track-index="2">
-        <div class="scene-content">
+        <div class="glow r" data-layout-allow-overflow></div>
+        <div class="sc">
           <div class="kicker" id="s5-k">// step five · anti-confirmation</div>
           <div class="steplabel"><div class="stepnum" id="s5-n">05</div><div class="stepname" id="s5-name">Refute</div></div>
           <div class="sub" id="s5-s">A skeptical second pass argues against each risk and recalibrates its confidence.</div>
@@ -238,7 +178,8 @@
 
       <!-- S6 · rank -->
       <div id="s6" class="scene clip" data-start="75.4" data-duration="11.6" data-track-index="1">
-        <div class="scene-content">
+        <div class="glow" data-layout-allow-overflow></div>
+        <div class="sc">
           <div class="kicker" id="s6-k">// step six</div>
           <div class="steplabel"><div class="stepnum" id="s6-n">06</div><div class="stepname" id="s6-name">Rank</div></div>
           <div class="chips" id="s6-chips">
@@ -251,7 +192,8 @@
 
       <!-- S7 · self-assess -->
       <div id="s7" class="scene clip" data-start="86.4" data-duration="16.6" data-track-index="2">
-        <div class="scene-content">
+        <div class="glow" data-layout-allow-overflow></div>
+        <div class="sc">
           <div class="kicker" id="s7-k">// step seven</div>
           <div class="steplabel"><div class="stepnum" id="s7-n">07</div><div class="stepname" id="s7-name">Self-assess</div></div>
           <div class="sub" id="s7-s">It admits what's missing and where its memory is blind — then builds the rest.</div>
@@ -264,11 +206,12 @@
         </div>
       </div>
 
-      <!-- S8 · hardened orchestration + trace -->
+      <!-- S8 · hardened -->
       <div id="s8" class="scene clip" data-start="102.4" data-duration="16.6" data-track-index="1">
-        <div class="scene-content">
+        <div class="glow" data-layout-allow-overflow></div>
+        <div class="sc">
           <div class="kicker" id="s8-k">// hardened orchestration</div>
-          <div class="mega" id="s8-l1" style="font-size:84px">An auditable<br />reasoning trace</div>
+          <div class="mega glow-t" id="s8-l1" style="font-size:84px">An auditable<br />reasoning trace</div>
           <div class="trace" id="s8-trace">
             <div class="tstep" id="s8-t1"><span class="tdot"></span><span class="tn">[1]</span> profile<span class="tms">142 ms</span></div>
             <div class="tstep" id="s8-t2"><span class="tdot"></span><span class="tn">[2]</span> retrieve<span class="tms">88 ms</span></div>
@@ -283,41 +226,72 @@
         </div>
       </div>
 
-      <!-- S9 · close (única escena con salida) -->
+      <!-- S9 · close -->
       <div id="s9" class="scene clip" data-start="118.4" data-duration="10.6" data-track-index="2">
-        <div class="scene-content cta-center">
+        <div class="glow" data-layout-allow-overflow></div>
+        <div class="sc cta-center">
           <div class="foot" id="s9-pre">not a magic answer</div>
-          <div class="mega" id="s9-l1" style="font-size:92px">A chain of<br />reasoning</div>
+          <div class="mega glow-t" id="s9-l1" style="font-size:92px">A chain of<br />reasoning</div>
           <div class="foot" id="s9-foot">transparent · measurable · traceable to real evidence</div>
           <div class="kicker" id="s9-logo" style="margin-top:18px">// pre-mortem institucional</div>
         </div>
       </div>
 
+      <!-- capas ambientales (encima, sutiles) -->
+      <div id="dust" class="clip" data-start="0" data-duration="129" data-track-index="3"></div>
+      <div id="leak" class="clip" data-start="0" data-duration="129" data-track-index="4"></div>
+
       <script src="gsap.min.js"></script>
       <script>
         window.__timelines = window.__timelines || {};
         const tl = gsap.timeline({ paused: true });
-        const T = 0.6; // duración del fundido cruzado entre escenas
+        const T = 0.6;
 
-        // contador seekeable
+        // partículas deterministas (mulberry32)
+        function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+        const rnd = mulberry32(0x51ed);
+        const dust = document.getElementById("dust");
+        for (let i = 0; i < 28; i++) {
+          const d = document.createElement("div");
+          d.className = "dot";
+          const s = 2 + rnd() * 3;
+          d.style.left = (rnd() * 1920) + "px";
+          d.style.top = (rnd() * 1080) + "px";
+          d.style.width = s + "px"; d.style.height = s + "px";
+          d.style.opacity = (0.06 + rnd() * 0.12).toFixed(3);
+          dust.appendChild(d);
+        }
+        // deriva lenta + parpadeo, repeticiones finitas
+        const cyc = 9, reps = Math.ceil(129 / cyc) - 1;
+        tl.to("#dust .dot", { y: "-=46", duration: cyc, ease: "sine.inOut", repeat: reps, yoyo: true, stagger: { each: 0.18, from: "random" } }, 0);
+
         function countTo(proxy, el, to, t, dur) {
-          tl.to(proxy, { v: to, duration: dur, ease: "power2.out",
-            onUpdate: () => { el().textContent = String(Math.round(proxy.v)); } }, t);
+          tl.to(proxy, { v: to, duration: dur, ease: "power2.out", onUpdate: () => { el().textContent = String(Math.round(proxy.v)); } }, t);
         }
-        // fundido cruzado: la escena entrante aparece sobre la saliente (sin clip, sin 3D)
-        function fadeIn(sel, t) {
-          tl.from(sel, { opacity: 0, duration: T, ease: "power2.inOut" }, t);
+        // transición: fundido entrante + push-in de cámara (termina en 1.0 = seguro)
+        function enter(scene, sc, t) {
+          tl.from(scene, { opacity: 0, duration: T, ease: "power2.inOut" }, t);
+          tl.fromTo(sc, { scale: 1.045 }, { scale: 1.0, duration: 1.3, ease: "expo.out" }, t);
+          // light-leak en la costura
+          tl.fromTo("#leak", { opacity: 0 }, { opacity: 0.34, duration: 0.3, ease: "power2.out" }, t);
+          tl.to("#leak", { opacity: 0, duration: 0.45, ease: "power2.in" }, t + 0.3);
         }
+        // halo: respiración lenta global (todas las escenas)
+        tl.to(".glow", { scale: 1.12, opacity: 0.78, duration: 6.5, ease: "sine.inOut", repeat: Math.ceil(129 / 6.5) - 1, yoyo: true, transformOrigin: "center center" }, 0);
 
-        // ── S0 (0–8) · entradas 2D limpias
-        tl.from("#s0-k", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 0.2);
-        tl.from("#s0-l1", { y: 60, opacity: 0, duration: 0.7, ease: "power3.out" }, 0.45);
-        tl.from("#s0-l2", { y: 60, opacity: 0, duration: 0.7, ease: "expo.out" }, 0.7);
-        tl.from("#s0-s", { y: 24, opacity: 0, duration: 0.6, ease: "power1.inOut" }, 1.3);
-        tl.to("#s0-cur", { opacity: 0, duration: 0.5, ease: "steps(1)", repeat: 11, yoyo: true }, 1.3);
+        // ── S0 · eslogan
+        tl.fromTo("#s0 .sc", { scale: 1.05 }, { scale: 1.0, duration: 1.6, ease: "expo.out" }, 0.1);
+        tl.from("#s0-k", { y: 24, opacity: 0, duration: 0.5, ease: "power2.out" }, 0.2);
+        tl.from("#s0-l1", { y: 56, opacity: 0, duration: 0.7, ease: "power3.out" }, 0.5);
+        tl.fromTo("#s0-strike", { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "power3.inOut" }, 1.9);
+        tl.from("#s0-l2", { y: 46, opacity: 0, duration: 0.7, ease: "back.out(1.5)" }, 2.5);
+        tl.fromTo("#s0-l2", { textShadow: "0 0 0px rgba(242,176,30,0)" }, { textShadow: "0 0 60px rgba(242,176,30,0.6)", duration: 0.6, ease: "power2.out" }, 2.7);
+        tl.from("#s0-s", { y: 22, opacity: 0, duration: 0.6, ease: "power1.inOut" }, 3.5);
+        tl.from("#s0-p1", { opacity: 0, x: 60, duration: 0.9, ease: "power2.out" }, 1.2);
+        tl.to("#s0-p1", { y: "-=26", duration: 5, ease: "sine.inOut" }, 2.2);
 
         // ── S1 profile
-        fadeIn("#s1", 7.4);
+        enter("#s1", "#s1 .sc", 7.4);
         tl.from("#s1-k", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 7.8);
         tl.from("#s1-n", { y: 50, opacity: 0, duration: 0.6, ease: "back.out(1.4)" }, 8.0);
         tl.from("#s1-name", { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 8.2);
@@ -328,7 +302,7 @@
         tl.from("#s1-e", { y: 34, opacity: 0, duration: 0.45, ease: "back.out(1.5)" }, 9.65);
 
         // ── S2 retrieve
-        fadeIn("#s2", 21.4);
+        enter("#s2", "#s2 .sc", 21.4);
         tl.from("#s2-k", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 21.8);
         tl.from("#s2-n", { y: 50, opacity: 0, duration: 0.6, ease: "back.out(1.4)" }, 22.0);
         tl.from("#s2-name", { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 22.2);
@@ -338,7 +312,7 @@
         tl.from("#s2-r3", { x: -40, opacity: 0, duration: 0.5, ease: "power3.out" }, 23.6);
 
         // ── S3 deduplicate
-        fadeIn("#s3", 35.4);
+        enter("#s3", "#s3 .sc", 35.4);
         tl.from("#s3-k", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 35.8);
         tl.from("#s3-n", { y: 50, opacity: 0, duration: 0.6, ease: "back.out(1.4)" }, 36.0);
         tl.from("#s3-name", { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 36.2);
@@ -348,13 +322,13 @@
         tl.from("#s3-r3", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 37.6);
 
         // ── S4 map
-        fadeIn("#s4", 46.4);
+        enter("#s4", "#s4 .sc", 46.4);
         tl.from("#s4-k", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 46.8);
-        tl.from("#s4-stamp", { scale: 0.8, opacity: 0, duration: 0.7, ease: "back.out(1.5)" }, 47.1);
+        tl.from("#s4-stamp", { scale: 0.82, opacity: 0, duration: 0.7, ease: "back.out(1.5)" }, 47.1);
         tl.from("#s4-s", { y: 26, opacity: 0, duration: 0.6, ease: "power2.out" }, 47.9);
 
-        // ── S5 refute · número 80 → 50 + barra que baja
-        fadeIn("#s5", 60.4);
+        // ── S5 refute · 80 → 50
+        enter("#s5", "#s5 .sc", 60.4);
         tl.from("#s5-k", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 60.8);
         tl.from("#s5-n", { y: 50, opacity: 0, duration: 0.6, ease: "back.out(1.4)" }, 61.0);
         tl.from("#s5-name", { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 61.2);
@@ -366,7 +340,7 @@
         countTo(p5, n5, 50, 63.2, 1.6);
 
         // ── S6 rank
-        fadeIn("#s6", 75.4);
+        enter("#s6", "#s6 .sc", 75.4);
         tl.from("#s6-k", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 75.8);
         tl.from("#s6-n", { y: 50, opacity: 0, duration: 0.6, ease: "back.out(1.4)" }, 76.0);
         tl.from("#s6-name", { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 76.2);
@@ -375,7 +349,7 @@
         tl.from("#s6-d", { y: 34, opacity: 0, duration: 0.5, ease: "back.out(1.4)" }, 77.3);
 
         // ── S7 self-assess
-        fadeIn("#s7", 86.4);
+        enter("#s7", "#s7 .sc", 86.4);
         tl.from("#s7-k", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 86.8);
         tl.from("#s7-n", { y: 50, opacity: 0, duration: 0.6, ease: "back.out(1.4)" }, 87.0);
         tl.from("#s7-name", { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 87.2);
@@ -386,7 +360,7 @@
         tl.from("#s7-c4", { y: 40, opacity: 0, duration: 0.5, ease: "power3.out" }, 88.75);
 
         // ── S8 hardened
-        fadeIn("#s8", 102.4);
+        enter("#s8", "#s8 .sc", 102.4);
         tl.from("#s8-k", { y: 26, opacity: 0, duration: 0.5, ease: "power2.out" }, 102.8);
         tl.from("#s8-l1", { y: 44, opacity: 0, duration: 0.7, ease: "power3.out" }, 103.0);
         tl.from("#s8-t1", { x: -34, opacity: 0, duration: 0.45, ease: "power3.out" }, 103.8);
@@ -397,13 +371,13 @@
         tl.from("#s8-d", { y: 34, opacity: 0, duration: 0.45, ease: "expo.out" }, 105.1);
         tl.from("#s8-e", { scale: 0.7, opacity: 0, duration: 0.5, ease: "back.out(1.8)" }, 105.3);
 
-        // ── S9 close · única escena con salida (fundido final)
-        fadeIn("#s9", 118.4);
+        // ── S9 close
+        enter("#s9", "#s9 .sc", 118.4);
         tl.from("#s9-pre", { y: 18, opacity: 0, duration: 0.5, ease: "power2.out" }, 118.9);
         tl.from("#s9-l1", { y: 50, opacity: 0, duration: 0.8, ease: "power3.out" }, 119.2);
         tl.from("#s9-foot", { y: 18, opacity: 0, duration: 0.6, ease: "power1.inOut" }, 120.1);
         tl.from("#s9-logo", { opacity: 0, y: 16, duration: 0.5, ease: "power2.out" }, 120.6);
-        tl.to("#s9 .scene-content", { opacity: 0, duration: 0.9, ease: "power2.in" }, 127.7);
+        tl.to("#s9 .sc", { opacity: 0, duration: 0.9, ease: "power2.in" }, 127.7);
 
         window.__timelines["root"] = tl;
       </script>
