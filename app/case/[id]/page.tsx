@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getRecordById } from "@/lib/retrieval";
 import CaseChat from "@/components/CaseChat";
 import { getServerLang, makeTr } from "@/lib/serverlang";
+import { tlabel } from "@/lib/labels";
 
 export const dynamic = "force-dynamic";
 
@@ -57,21 +58,21 @@ export default function CasePage({ params }: { params: { id: string } }) {
             <b>{tr("año", "year")}</b> {record.year}
           </span>
           <span className="tag">
-            <b>{tr("cliente", "client")}</b> {record.clientType}
+            <b>{tr("cliente", "client")}</b> {tlabel(record.clientType, lang)}
           </span>
           {record.tech.map((t) => (
             <span className="tag" key={t}>
-              <b>tech</b> {t}
+              <b>tech</b> {tlabel(t, lang)}
             </span>
           ))}
           <span className="tag">
-            <b>{tr("apuesta", "bet")}</b> {record.marketBet}
+            <b>{tr("apuesta", "bet")}</b> {tlabel(record.marketBet, lang)}
           </span>
           <span className="tag">
-            <b>{tr("equipo", "team")}</b> {record.teamDynamics}
+            <b>{tr("equipo", "team")}</b> {tlabel(record.teamDynamics, lang)}
           </span>
           <span className="tag amber">
-            <b>{tr("categoría", "category")}</b> {record.failureCategory}
+            <b>{tr("categoría", "category")}</b> {tlabel(record.failureCategory, lang)}
           </span>
           <span className="tag amber">
             <b>{tr("severidad", "severity")}</b> {record.severity}/5

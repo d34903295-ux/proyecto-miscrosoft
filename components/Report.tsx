@@ -22,6 +22,7 @@ import type {
 import SimViz from "@/components/SimViz";
 import RiskMatrix from "@/components/RiskMatrix";
 import Tilt from "@/components/Tilt";
+import { tlabel } from "@/lib/labels";
 
 // ── i18n de los rótulos fijos del reporte ───────────────────────────────────
 // El CONTENIDO (riesgos, consejo, funeral…) lo traduce el modelo en el servidor;
@@ -163,7 +164,7 @@ const UI: Record<string, string> = {
 
 function useTr(): (es: string) => string {
   const l = useContext(RLangCtx);
-  return (es: string) => (l === "en" ? UI[es] ?? es : es);
+  return (es: string) => (l === "en" ? UI[es] ?? tlabel(es, "en") : es);
 }
 
 function sevLevel(severity: number): "high" | "mid" | "low" {
@@ -373,7 +374,7 @@ function download(filename: string, text: string, mime = "text/markdown;charset=
 export default function Report({ report }: { report: PreMortemReport }) {
   const { profile, risks, verdict } = report;
   const lang: RLang = report.lang === "en" ? "en" : "es";
-  const tr = (es: string) => (lang === "en" ? UI[es] ?? es : es);
+  const tr = (es: string) => (lang === "en" ? UI[es] ?? tlabel(es, "en") : es);
   const [copied, setCopied] = useState<"md" | "link" | null>(null);
 
   function flash(kind: "md" | "link") {
@@ -545,7 +546,7 @@ export default function Report({ report }: { report: PreMortemReport }) {
         title={tr("// simulación · ¿y si lo haces de todos modos?")}
         count={`${tr("vivo a 5 años ~")}${Math.round(report.simulation.survival5y * 100)}%`}
       >
-        <SimViz simulation={report.simulation} />
+        <SimViz simulation={report.simulation} lang={lang} />
       </Collapsible>
 
       <Collapsible
@@ -630,7 +631,7 @@ function PnrSection({ pnr }: { pnr: PointOfNoReturn | null }) {
           {pnr.conditions.map((c) => (
             <li key={c.caseId + c.failureCategory}>
               <b>{c.condition}</b>{" "}
-              <span className="pnr-when">({c.deadline} · {c.failureCategory.toLowerCase()} · {tr("caso")}{" "}
+              <span className="pnr-when">({c.deadline} · {tr(c.failureCategory).toLowerCase()} · {tr("caso")}{" "}
               <a className="cmd" href={`/case/${c.caseId}`}>{c.caseId}</a>)</span>
             </li>
           ))}
@@ -655,7 +656,7 @@ function CostSection({ costs }: { costs: CostModel }) {
         </div>
         {costs.perRisk.map((c) => (
           <div className="cost-row" role="row" key={c.rank}>
-            <span>#{c.rank} {c.failureCategory}</span>
+            <span>#{c.rank} {tr(c.failureCategory)}</span>
             <span>{Math.round(c.probability * 100)}%</span>
             <span>{usd(c.impact)}</span>
             <span className="cost-exp">{usd(c.expected)}</span>
@@ -758,8 +759,8 @@ function GapsSection({ gaps }: { gaps: GapQuestion[] }) {
             transition={{ duration: 0.45, delay: i * 0.08, ease: EASE }}
           >
             <div className="gap-head">
-              <span className="gap-missing">{tr("falta:")} {g.missing}</span>
-              <span className="tag amber">{g.failureCategory}</span>
+              <span className="gap-missing">{tr("falta:")} {tr(g.missing)}</span>
+              <span className="tag amber">{tr(g.failureCategory)}</span>
             </div>
             <div className="gap-q prose">{g.question}</div>
             <div className="gap-why prose">{g.why}</div>
@@ -781,7 +782,7 @@ function CoverageSection({ coverage }: { coverage: CoverageGap[] }) {
       <div className="tags">
         {coverage.map((c) => (
           <span className="tag" key={`${c.dimension}-${c.value}`}>
-            <b>{tr(c.dimension)}</b> {c.value} · {c.casesInMemory} {tr("casos")}
+            <b>{tr(c.dimension)}</b> {tr(c.value)} · {c.casesInMemory} {tr("casos")}
           </span>
         ))}
       </div>
